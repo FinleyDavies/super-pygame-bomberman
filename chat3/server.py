@@ -53,3 +53,6 @@ while True:
 				continue
 			else:
 				print(f"{clients[notified_socket]['data'].decode('utf-8')}: {msg['data'].decode('utf-8')}")
+				for client_socket in clients:
+					if client_socket != notified_socket:
+						client_socket.send(user)
