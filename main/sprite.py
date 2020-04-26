@@ -2,7 +2,6 @@ import pygame
 import time
 import sys
 import os
-pygame.display.set_mode((1,1), pygame.NOFRAME)
 
 SPRITES = "Super_Bomberman_SNES"
 SCALE_FACTOR = 3

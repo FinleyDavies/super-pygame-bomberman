@@ -46,6 +46,7 @@ while True:
 
 		else:
 			msg = receive_message(notified_socket)
+			print(msg)
 			if msg is False:
 				print(clients[notified_socket]["data"].decode("utf-8"), "Disconnected")
 				socket_list.remove(notified_socket)
@@ -55,4 +56,5 @@ while True:
 				print(f"{clients[notified_socket]['data'].decode('utf-8')}: {msg['data'].decode('utf-8')}")
 				for client_socket in clients:
 					if client_socket != notified_socket:
-						client_socket.send(user)
+						client_socket.send(clients[notified_socket]["header"] + clients[notified_socket]["data"] +
+										   msg["header"] + msg["data"])
