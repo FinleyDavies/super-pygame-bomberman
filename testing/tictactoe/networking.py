@@ -11,4 +11,6 @@ class Server:
 		if address is None:
 			address = socket.gethostbyname(socket.gethostname())
 
+
 def receive_packet(client_socket):
+	pass
