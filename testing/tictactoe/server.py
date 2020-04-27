@@ -36,7 +36,3 @@ def receive_command(client_socket):
 	response = commands[command[0]](command[1]).encode()
 	header = f"{len(response):<{HEADERSIZE}}".encode()
 	client_socket.send(header + response)
-
-
-
-
