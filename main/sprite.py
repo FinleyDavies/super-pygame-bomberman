@@ -82,7 +82,7 @@ class Animation:
 		"""
 		self.timer = time.time()
 
-	def get_frame(self):
+	def get_current_frame(self):
 		delta = time.time() - self.timer
 		delta *= 1000
 
@@ -100,12 +100,12 @@ class Animation:
 				break
 			current_frame += 1
 
-		return self._get_sprite(self.indices[current_frame])
+		return self.get_frame(current_frame)
 
-	def _get_sprite(self, index):
-		return self.sprite_sheet.get_sprites()[index[1]][index[0]]
+	def get_frame(self, index):
+		return self.sprite_sheet.get_sprites()[self.indices[index][1]][self.indices[index][0]]
 
 
 path = os.path.abspath(os.path.join("..", "Sprites", SPRITES, "players.png"))
 players = SpriteSheet(path, (16, 24))
-walk1 = Animation([(7, 0), (6, 0), (8, 0), (6, 0)], [300, 200, 300, 200], players)
+testing_anim = Animation([(7, 0), (6, 0), (8, 0), (6, 0)], [300, 200, 300, 200], players)

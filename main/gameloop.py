@@ -1,5 +1,5 @@
 import pygame
-from sprite import walk1, players
+from sprite import testing_anim, players
 import os
 import time
 pygame.init()
@@ -18,12 +18,12 @@ while running:
             running = False
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_s:
-                walk1.start_animation()
+                testing_anim.start_animation()
             elif event.key == pygame.K_w:
                 players.scale()
 
     if pygame.key.get_pressed()[pygame.K_s]:
-        screen.blit(walk1.get_frame(), (WIDTH//2, HEIGHT//2))
+        screen.blit(testing_anim.get_current_frame(), (WIDTH // 2, HEIGHT // 2))
 
     pygame.display.update()
     screen.fill((16, 120, 48))

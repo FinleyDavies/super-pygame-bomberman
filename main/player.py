@@ -1,32 +1,38 @@
 import time
 import os
-from abc import ABCMeta
 
 
 class Player:
 	MOVEMENT_VECTORS = [
-		[1, 0], [1, 1], [0, 1], [-1, 1],
-		[-1, 0], [-1, -1], [0, -1], [1, -1]
+		[0, -1], [-1, -1], [-1, 0], [-1, 1],
+		[0, 1], [1, 1], [1, 0], [1, -1],
 	]
 
 	def __init__(self):
 		self.x = 0
 		self.y = 0
-		self.speed = 1
+		self.speed = 3
 		self.bomb_count = 1
 		self.bomb_radius = 2
 		self.bombs_active = 0
 		self.bombs = []
 		self.powerups = [False, False, False, False]
 
-	def move(self, direction):
-		self.x += self.MOVEMENT_VECTORS[direction][0] * self.speed
-		self.y += self.MOVEMENT_VECTORS[direction][1] * self.speed
+		self.direction = 2  # facing downwards
+		self.is_moving = False
+
+	def update_pos(self):
+		if self.is_moving:
+			self.x += self.MOVEMENT_VECTORS[self.direction][0] * self.speed
+			self.y += self.MOVEMENT_VECTORS[self.direction][1] * self.speed
 
 	def place_bomb(self):
 		if self.bombs_active < self.bomb_count:
 			self.bombs.append(Bomb(self))
 			self.bomb_count += 1
+
+	def punch(self):
+		pass
 
 	def remove_bomb(self, bomb):
 		self.bombs.remove(bomb)
@@ -37,6 +43,21 @@ class Player:
 
 	def get_bomb_radius(self):
 		return self.bomb_radius
+
+	def set_direction(self, direction):
+		self.direction = direction
+
+	def set_is_moving(self, is_moving):
+		self.is_moving = is_moving
+
+	def get_direction(self):
+		return self.direction
+
+	def get_is_moving(self):
+		return self.is_moving
+
+	def get_pos(self):
+		return self.x, self.y
 
 
 class Bomb:
@@ -73,7 +94,65 @@ class Board:
 		pass
 
 
+# TODO TESTING CODE remove after full implementation
+if __name__ == "__main__":
+	import pygame
+	import command
+	from sprite import testing_anim
 
+	pygame.init()
 
-path = os.path.abspath(os.path.join("..", "Arenas", "Arena1.txt"))
-b = Board(path)
+	WIDTH, HEIGHT = (640, 480)
+	screen = pygame.display.set_mode((WIDTH, HEIGHT))
+
+	KEYS = [pygame.K_w, pygame.K_a, pygame.K_s, pygame.K_d]
+
+	clock = pygame.time.Clock()
+	player = Player()
+
+	def get_command_from_keystate(keystate):
+		if keystate[0]:
+			if keystate[1]:
+				return command.Move(player, 1)
+			if keystate[3]:
+				return command.Move(player, 7)
+			return command.Move(player, 0)
+
+		elif keystate[1]:
+			if keystate[2]:
+				return command.Move(player, 3)
+			return command.Move(player, 2)
+
+		elif keystate[2]:
+			if keystate[3]:
+				return command.Move(player, 5)
+			return command.Move(player, 4)
+
+		elif keystate[3]:
+			return command.Move(player, 6)
+
+		return command.Stop(player)
+
+	running = True
+	while running:
+		for event in pygame.event.get():
+			if event.type == pygame.QUIT:
+				running = False
+			if event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
+				testing_anim.start_animation()
+				keystate = [pygame.key.get_pressed()[key] for key in KEYS]
+				print(keystate)
+				get_command_from_keystate(keystate).execute()
+				print(player.get_direction())
+
+		player.update_pos()
+		if player.get_is_moving():
+			screen.blit(testing_anim.get_current_frame(), player.get_pos())
+		else:
+			screen.blit(testing_anim.get_frame(1), player.get_pos())
+
+		pygame.display.update()
+		screen.fill((16, 120, 48))
+		clock.tick(60)
+
+	pygame.quit()
