@@ -61,7 +61,7 @@ class SpriteSheet:
 
 
 class Animation:
-	def __init__(self, indices, delays, sprite_sheet, loop=True):
+	def __init__(self, sprite_sheet, indices, delays, loop=True):
 		"""
 		:list frames: list of 2d indices pointing to surfaces in a SpriteSheet object
 		:list delays: duration of each frame in ms
@@ -70,8 +70,12 @@ class Animation:
 		"""
 		self.sprite_sheet = sprite_sheet
 		self.indices = indices
-		self.delays = delays
-		self.duration = sum(delays)
+		if isinstance(delays, (list, tuple)):
+			self.delays = delays
+		else:
+			self.delays = [delays//len(indices) for _ in indices]
+
+		self.duration = sum(self.delays)
 		self.loop = loop
 		self.timer = 0
 
@@ -105,7 +109,6 @@ class Animation:
 	def get_frame(self, index):
 		return self.sprite_sheet.get_sprites()[self.indices[index][1]][self.indices[index][0]]
 
+	def get_times_looped(self):
+		return (time.time() - self.timer) // self.duration
 
-path = os.path.abspath(os.path.join("..", "Sprites", SPRITES, "players.png"))
-players = SpriteSheet(path, (16, 24))
-testing_anim = Animation([(7, 0), (6, 0), (8, 0), (6, 0)], [300, 200, 300, 200], players)

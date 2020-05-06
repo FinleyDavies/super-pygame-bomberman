@@ -1,0 +1,44 @@
+{
+  "floor": {
+    "id": 0,
+    "symbol": ".",
+    "is_solid": false,
+    "destructible": false,
+    "duration": 0
+  },
+  "wall": {
+    "id": 1,
+    "symbol": "=",
+    "is_solid": true,
+    "destructible": true,
+    "duration": 0
+  },
+  "wall_destroyed": {
+    "id": 1,
+    "symbol": "/",
+    "is_solid": true,
+    "destructible": false,
+    "duration": 500
+  },
+  "barrier": {
+    "id": 2,
+    "symbol": "#",
+    "is_solid": true,
+    "destructible": false,
+    "duration": 0
+  },
+  "bomb": {
+    "id": 3,
+    "symbol": "O",
+    "is_solid": true,
+    "destructible": true,
+    "duration": 0
+  },
+  "flame": {
+    "id": 4,
+    "symbol": "^",
+    "is_solid": true,
+    "destructible": false,
+    "duration": 1000
+  }
+}
