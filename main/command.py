@@ -14,6 +14,9 @@ class Command(metaclass=ABCMeta):
 	def execute(self):
 		pass
 
+	def __repr__(self):
+		return f"{self.__class__.__name__}({self.target}, {self.kwargs})"
+
 
 class Move(Command):
 	id = 1
@@ -51,10 +54,10 @@ class Punch(Command):
 class UpdateTile(Command):
 	id = 5
 
-	def __init__(self, target, position, new_tile):
-		super().__init__(target)
-		self.position = position
-		self.new_tile = new_tile
+	def __init__(self, target, index, tile):
+		super().__init__(target, index=index, tile=tile)
+		self.index = index
+		self.tile = tile
 
 	def execute(self):
-		self.target.set_tile(self.position, self.new_tile)
+		self.target.set_tile(self.index, self.tile)

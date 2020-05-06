@@ -82,5 +82,5 @@ class Bomb:
 	def explode(self):
 		self.owner.remove_bomb(self)
 		tile_x, tile_y = self.owner.board.get_tile_from_pos((self.x, self.y))
-		self.owner.board.explode_tile((tile_x, tile_y))
+		self.owner.board.create_explosion((tile_x, tile_y))
 
