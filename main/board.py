@@ -47,7 +47,6 @@ class Board:
 				offset_x *= i
 				offset_y *= i
 				new_index = index[0] + offset_x, index[1] + offset_y
-				print(new_index)
 
 				if self.explode_tile(new_index):
 					break
@@ -62,7 +61,7 @@ class Board:
 		return False
 
 	def set_tile(self, index, tile):
-		pass
+		self.board[index[1]][index[0]] = tile
 
 	def tile_is_occupied(self, index):
 		pass
@@ -71,7 +70,6 @@ class Board:
 		return pos[0] // self.tile_width, pos[1] // self.tile_height
 
 	def tile_properties(self, index):
-		print(self.board[index[1]][index[0]])
 		return self.tiles[self.board[index[1]][index[0]]]
 
 	def get_updates(self):
@@ -88,9 +86,11 @@ if __name__ == "__main__":
 	BOARD = "Arena1.txt"
 	WIDTH, HEIGHT = (15 * 16 * 3, 13 * 16 * 3)
 
+
 	def load_board(board_name, size):
 		path = os.path.abspath(os.path.join("..", "Boards", board_name))
 		return Board(path, size)
+
 
 	board = load_board(BOARD, (WIDTH, HEIGHT))
 
@@ -99,6 +99,12 @@ if __name__ == "__main__":
 			print(board.tiles[tile]["symbol"], end="")
 		print()
 
-	board.create_explosion((3, 1), 2)
+	board.create_explosion((2, 1), 3)
 	for command in board.commands:
 		print(command.index, command.tile)
+		command.execute()
+
+	for row in board.board:
+		for tile in row:
+			print(board.tiles[tile]["symbol"], end="")
+		print()
