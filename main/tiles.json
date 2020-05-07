@@ -5,6 +5,7 @@
     "symbol": ".",
     "is_solid": false,
     "destructible": false,
+    "blocks_movement": false,
     "duration": 0
   },
   "wall": {
@@ -13,6 +14,7 @@
     "symbol": "=",
     "is_solid": true,
     "destructible": true,
+    "blocks_movement": true,
     "duration": 0
   },
   "wall_destroyed": {
@@ -21,6 +23,7 @@
     "symbol": "/",
     "is_solid": true,
     "destructible": false,
+    "blocks_movement": true,
     "duration": 500
   },
   "barrier": {
@@ -29,6 +32,7 @@
     "symbol": "#",
     "is_solid": true,
     "destructible": false,
+    "blocks_movement": true,
     "duration": 0
   },
   "bomb": {
@@ -37,6 +41,7 @@
     "symbol": "O",
     "is_solid": true,
     "destructible": true,
+    "blocks_movement": true,
     "duration": 0
   },
   "flame": {
@@ -45,6 +50,7 @@
     "symbol": "^",
     "is_solid": true,
     "destructible": false,
+    "blocks_movement": false,
     "duration": 1000
   }
 }
