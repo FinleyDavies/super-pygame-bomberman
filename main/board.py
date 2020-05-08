@@ -8,6 +8,7 @@ class Board:
 	supported_symbols = [value["symbol"] for value in tiles.values()]
 
 	def __init__(self, path, window_size):
+		self.players = []
 		self.board = self._load_file(path)
 		self.width, self.height = window_size
 		self.rows = len(self.board)
@@ -80,7 +81,18 @@ class Board:
 		return Rect(index[0] * self.tile_width, index[1] * self.tile_height, self.tile_width, self.tile_height)
 
 	def tile_properties(self, index):
-		return self.tiles[self.board[index[1]][index[0]]]
+		if 0 < index[0] < self.cols and 0 < index[1] < self.rows:
+			return self.tiles[self.board[index[1]][index[0]]]
+		return self.tiles["barrier"]
+
+	def get_tile_size(self):
+		return self.tile_width, self.tile_height
+
+	def get_size(self):
+		return self.cols, self.rows
+
+	def add_player(self, player):
+		self.players.append(player)
 
 	def get_updates(self):
 		"""
