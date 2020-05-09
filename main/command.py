@@ -22,7 +22,7 @@ class Move(Command):
 	id = 1
 
 	def __init__(self, target, direction):
-		super().__init__(target)
+		super().__init__(target, direction=direction)
 		self.direction = direction
 
 	def execute(self):

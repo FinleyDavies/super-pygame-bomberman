@@ -120,6 +120,10 @@ def draw_grid(surface, board):
 
 def draw_player(surface, player):
 	pygame.draw.rect(surface, player.get_colour(), player.get_rect())
+	pos = player.get_pos()
+	line_end = pos[0] + player.MOVEMENT_VECTORS[player.movement_direction][0] * player.width // 2, \
+			   pos[1] + player.MOVEMENT_VECTORS[player.movement_direction][1] * player.height // 2
+	pygame.draw.line(surface, (232, 32, 32), pos, line_end, 2)
 	return surface
 
 
@@ -145,13 +149,14 @@ def main():
 			if event.type == pygame.QUIT:
 				running = False
 			if event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
-				print(player.get_pos())
+				#print(player.get_pos())
 				keystate = [pygame.key.get_pressed()[key] for key in KEYS]
 				command = get_command_from_keystate(keystate, player)
 				command_queue.append(command)
 				# client.send_command(command)
 
 		for command in command_queue:
+			print(command)
 			command.execute()
 		command_queue = []
 		player.update_pos()

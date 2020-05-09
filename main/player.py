@@ -9,7 +9,7 @@ class Player:
 	]
 
 	PUNCH_TIME = 500
-	CORNER_THRESH = 0.5 + 0.2
+	CORNER_THRESH = 0.5 + 0.1
 
 	def __init__(self, board, player_id):
 		self.player_id = player_id
@@ -19,13 +19,14 @@ class Player:
 		self.width, self.height = self.size = self.board.get_tile_size()
 		self.x, self.y = 0, 0
 
-		self.speed = self.width // 8 // 3
+		self.speed = self.width // 8 // 2
 		self.bomb_count = 1
 		self.bomb_radius = 2
 		self.bombs_active = 0
 		self.bombs = []
 		self.powerups = [False, False, False, False]
-		self.direction = 2  # facing downwards
+		self.movement_direction = 2  # facing downwards
+		self.control_direction = 2
 		self.is_moving = False
 		self.time_punched = 0
 		self.colour = (232, 232, 232)
@@ -33,7 +34,7 @@ class Player:
 
 	def update_pos(self):
 		if self.is_moving and not self.is_punching():
-			self.colour = (232, 232, 232)
+			self.change_direction()
 			# move player
 			# get all surrounding movement blocking tiles
 			# check for Rect collision
@@ -45,7 +46,7 @@ class Player:
 				self.x += vector[0] * self.speed
 				self.y += vector[1] * self.speed
 
-			vec = self.MOVEMENT_VECTORS[self.direction]
+			vec = self.MOVEMENT_VECTORS[self.movement_direction]
 
 			# todo fix the bug where player gets stuck on corners when moving diagonally
 			#  - by using approach similar to below code, but switching component when entering a new tile, instead of
@@ -126,13 +127,13 @@ class Player:
 					if tile["blocks_movement"]:
 						offset_y = self.y - self.board.get_pos_from_index(new_index)[1]
 						if abs(offset_y) < self.height - 1:
-							print("hit x")
+							#print("hit x")
 							if abs(offset_y) > self.CORNER_THRESH * self.height:
 								if offset_y < 0 and up_tile["blocks_movement"] is False:
-									print("up", dy)
+									#print("up", dy)
 									move([0, -1])
 								elif offset_y > 0 and down_tile["blocks_movement"] is False:
-									print("down", dy)
+									#print("down", dy)
 									move([0, 1])
 								else:
 									move([-vec[0], 0])
@@ -152,13 +153,13 @@ class Player:
 					if tile["blocks_movement"]:
 						offset_x = self.x - self.board.get_pos_from_index(new_index)[0]
 						if abs(offset_x) < self.width - 1:
-							print("hit y")
+							#print("hit y")
 							if abs(offset_x) > self.CORNER_THRESH * self.width:
 								if offset_x < 0 and left_tile["blocks_movement"] is False:
-									print("left", dx)
+									#print("left", dx)
 									move([-1, 0])
 								elif offset_x >= 0 and right_tile["blocks_movement"] is False:
-									print("right", dx)
+									#print("right", dx)
 									move([1, 0])
 								else:
 									move([0, -vec[1]])
@@ -166,6 +167,12 @@ class Player:
 								move([0, -vec[1]])
 							break
 
+	def change_direction(self):
+		# todo approach to both fix getting stuck and emulate original Super Bomberman movement
+		#  use more checks eg surrounding tiles, and whether change is perp or parallel to previous direction
+		x, y = self.board.get_pos_in_tile((self.x, self.y))
+		if abs(x) < 0.4 and abs(y) < 0.4:
+			self.movement_direction = self.control_direction
 
 	def place_bomb(self):
 		if self.bombs_active < self.bomb_count:
@@ -196,13 +203,13 @@ class Player:
 		return self.bomb_radius
 
 	def set_direction(self, direction):
-		self.direction = direction
+		self.control_direction = direction
 
 	def set_is_moving(self, is_moving):
 		self.is_moving = is_moving
 
 	def get_direction(self):
-		return self.direction
+		return self.movement_direction
 
 	def get_is_moving(self):
 		return self.is_moving
