@@ -171,7 +171,7 @@ class Player:
 		# todo approach to both fix getting stuck and emulate original Super Bomberman movement
 		#  use more checks eg surrounding tiles, and whether change is perp or parallel to previous direction
 		x, y = self.board.get_pos_in_tile((self.x, self.y))
-		if abs(x) < 0.4 and abs(y) < 0.4:
+		if abs(x) < 0.25 and abs(y) < 0.25:
 			self.movement_direction = self.control_direction
 
 	def place_bomb(self):
