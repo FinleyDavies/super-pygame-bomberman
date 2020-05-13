@@ -7,12 +7,13 @@ class Board:
 	tiles = json.load(open("tiles.json", "r"))
 	supported_symbols = [value["symbol"] for value in tiles.values()]
 
-	def __init__(self, path, window_size):
+	def __init__(self, path, window_size, board_id):
 		self.players = []
 		self.board = self._load_file(path)
 		self.width, self.height = window_size
 		self.rows = len(self.board)
 		self.cols = len(self.board[0])
+		self.board_id = board_id
 
 		self.tile_width = self.width // self.cols
 		self.tile_height = self.height // self.rows
@@ -100,6 +101,9 @@ class Board:
 		:return:
 		"""
 		pass
+
+	def get_id(self):
+		return self.board_id
 
 
 if __name__ == "__main__":

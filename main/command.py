@@ -1,10 +1,10 @@
 from abc import ABCMeta, abstractmethod
 from time import time
+from inspect import getmembers, getmodule, isclass
+from sys import modules
 
 
 class Command(metaclass=ABCMeta):
-	id = 0
-
 	def __init__(self, target, **kwargs):
 		self.time_created = time()
 		self.target = target
@@ -14,13 +14,18 @@ class Command(metaclass=ABCMeta):
 	def execute(self):
 		pass
 
+	def serialize(self):
+		serialized = dict()
+		serialized["name"] = self.__class__.__name__
+		serialized["target"] = self.target.get_id()
+		serialized["args"] = self.kwargs
+		return serialized
+
 	def __repr__(self):
 		return f"{self.__class__.__name__}({self.target}, {self.kwargs})"
 
 
 class Move(Command):
-	id = 1
-
 	def __init__(self, target, direction):
 		super().__init__(target, direction=direction)
 		self.direction = direction
@@ -31,29 +36,21 @@ class Move(Command):
 
 
 class Stop(Command):
-	id = 2
-
 	def execute(self):
 		self.target.set_is_moving(False)
 
 
 class PlaceBomb(Command):
-	id = 3
-
 	def execute(self):
 		self.target.place_bomb()
 
 
 class Punch(Command):
-	id = 4
-
 	def execute(self):
 		self.target.punch()
 
 
 class UpdateTile(Command):
-	id = 5
-
 	def __init__(self, target, index, tile):
 		super().__init__(target, index=index, tile=tile)
 		self.index = index
@@ -61,3 +58,14 @@ class UpdateTile(Command):
 
 	def execute(self):
 		self.target.set_tile(self.index, self.tile)
+
+
+commands_dict = {}
+for name, cls in getmembers(modules[__name__], isclass):
+	if getmodule(cls) == modules[__name__]:
+		commands_dict[name] = cls
+
+
+def deserialize(serialized, game_objects):
+	target = game_objects[serialized["target"]]
+	return commands_dict[serialized["name"]](target, **serialized["args"])

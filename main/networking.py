@@ -29,11 +29,36 @@
 # client thread to run for each connection
 
 import threading
+import socket
 
-class SocketServer(threading.Thread):
-	def __init__(self):
-		# initialise server socket and bind to specified port and address
-		pass
 
-	def run(self):
-		pass
+class SocketServer:
+    HEADER_LENGTH = 10
+    COMMAND_LENGTH = 3
+
+    def __init__(self, host, port):
+        self.host = host
+        self.port = port
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.sock.bind((self.host, self.port))
+
+        self.clients = {}  # client: username
+
+    def listen(self):
+        self.sock.listen(5)
+        while True:
+            client, address = self.sock.accept()
+            self.clients[client] = "username"
+            client.settimeout(60)
+            threading.Thread(target=self.client_thread(), args=(client, address)).start()
+
+    def client_thread(self):
+        pass
+
+    def receive_message(self, client):
+        length = int(client.recv(self.HEADER_LENGTH))
+        message_id = int(client.recv(self.COMMAND_LENGTH))
+        message_content = client.recv
+        print(length, message_id)
+

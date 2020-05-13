@@ -229,6 +229,9 @@ class Player:
 	def get_tile_pos(self):
 		return self.board.get_index_from_pos((self.x, self.y))
 
+	def get_id(self):
+		return self.player_id
+
 
 class Bomb:
 	def __init__(self, owner):
