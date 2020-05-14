@@ -27,7 +27,7 @@ def load_sprites(folder):
 
 def load_board(board_name, size):
 	path = os.path.abspath(os.path.join("..", "Boards", board_name))
-	return Board(path, size)
+	return Board(path, size, "board")
 
 
 def create_animations(players, tiles, powerups):
@@ -96,11 +96,14 @@ def draw_board(surface, board):
 	for x in range(board_size[0]):
 		for y in range(board_size[1]):
 			tile = board.tile_properties((x, y))["name"]
+			w, h = board.get_tile_size()
 			colour = colour_dic[tile]
-			pygame.draw.rect(surface, colour, board.get_tile_rect((x, y)))
+			pygame.draw.rect(surface, colour, pygame.Rect(x*w, y*h, w, h))
 
 	for player in board.players:
-		pygame.draw.rect(surface, (0, 104, 32), board.get_tile_rect(player.get_tile_pos()))
+		x, y = player.get_tile_pos()
+		w, h = board.get_tile_size()
+		pygame.draw.rect(surface, (0, 104, 32), pygame.Rect(x*w, y*h, w, h))
 
 	return surface
 
@@ -119,7 +122,11 @@ def draw_grid(surface, board):
 
 
 def draw_player(surface, player):
-	pygame.draw.rect(surface, player.get_colour(), player.get_rect())
+	x, y = player.get_pos()
+	w, h = player.get_size()
+	rect = pygame.Rect(x, y, w, h).move(-w//2, -h//2)
+
+	pygame.draw.rect(surface, player.get_colour(), rect)
 	pos = player.get_pos()
 	line_end = pos[0] + player.MOVEMENT_VECTORS[player.movement_direction][0] * player.width // 2, \
 			   pos[1] + player.MOVEMENT_VECTORS[player.movement_direction][1] * player.height // 2

@@ -1,6 +1,5 @@
 import json
 from command import UpdateTile
-from pygame import Rect
 
 
 class Board:
@@ -77,9 +76,6 @@ class Board:
 
 	def get_pos_in_tile(self, pos):
 		return (pos[0] % self.tile_width) / self.tile_width - 0.5, (pos[1] % self.tile_height) / self.tile_height - 0.5
-
-	def get_tile_rect(self, index):
-		return Rect(index[0] * self.tile_width, index[1] * self.tile_height, self.tile_width, self.tile_height)
 
 	def tile_properties(self, index):
 		if 0 < index[0] < self.cols and 0 < index[1] < self.rows:

@@ -1,5 +1,4 @@
 import time
-from pygame import Rect
 
 
 class Player:
@@ -16,7 +15,7 @@ class Player:
 
 		self.board = board
 		self.board.add_player(self)
-		self.width, self.height = self.size = self.board.get_tile_size()
+		self.width, self.height = self.board.get_tile_size()
 		self.x, self.y = 0, 0
 
 		self.speed = self.width // 8 // 2
@@ -171,8 +170,8 @@ class Player:
 		# todo approach to both fix getting stuck and emulate original Super Bomberman movement
 		#  use more checks eg surrounding tiles, and whether change is perp or parallel to previous direction
 		x, y = self.board.get_pos_in_tile((self.x, self.y))
-		if abs(x) < 0.25 and abs(y) < 0.25:
-			self.movement_direction = self.control_direction
+		#if abs(x) < 0.25 and abs(y) < 0.25:
+		self.movement_direction = self.control_direction
 
 	def place_bomb(self):
 		if self.bombs_active < self.bomb_count:
@@ -217,12 +216,6 @@ class Player:
 	def get_pos(self):
 		return self.x, self.y
 
-	def get_rect(self):
-		width, height = self.board.get_tile_size()
-		rect = Rect(self.x, self.y, width, height)
-		rect.move_ip(round(-width/2), round(-height/2))
-		return rect
-
 	def get_colour(self):
 		return self.colour
 
@@ -231,6 +224,9 @@ class Player:
 
 	def get_id(self):
 		return self.player_id
+
+	def get_size(self):
+		return self.width, self.height
 
 
 class Bomb:
