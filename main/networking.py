@@ -36,13 +36,26 @@ import json
 
 # todo completely redo with either select or asyncio
 
+def get_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    try:
+        # doesn't even have to be reachable
+        s.connect(('10.255.255.255', 1))
+        IP = s.getsockname()[0]
+    except:
+        IP = '127.0.0.1'
+    finally:
+        s.close()
+    return IP
+
+
 class SocketServer:
     HEADER_LENGTH = 10
     COMMAND_LENGTH = 3
 
     def __init__(self, host=0, port=0):
         if host == 0:
-            host = socket.gethostbyname(socket.gethostname())
+            host = get_ip()
         if port == 0:
             port = 4832
         self.host = host
@@ -82,8 +95,7 @@ class SocketServer:
                     raise Exception
 
             except:
-                print(client)
-                print(client.getsockname())
+                print(client.getsockname(), "disconnected")
                 self.clients.pop(client.getsockname())
                 client.close()
                 return False
