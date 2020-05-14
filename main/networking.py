@@ -30,13 +30,21 @@
 
 import threading
 import socket
+import time
+import json
 
+
+# todo completely redo with either select or asyncio
 
 class SocketServer:
     HEADER_LENGTH = 10
     COMMAND_LENGTH = 3
 
-    def __init__(self, host, port):
+    def __init__(self, host=0, port=0):
+        if host == 0:
+            host = socket.gethostbyname(socket.gethostname())
+        if port == 0:
+            port = 4832
         self.host = host
         self.port = port
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -45,20 +53,78 @@ class SocketServer:
 
         self.clients = {}  # client: username
 
+        self.game_commands = []
+        self.command_lock = threading.Lock()
+
+    def start_listening(self):
+        threading.Thread(target=self.listen).start()
+
     def listen(self):
         self.sock.listen(5)
+        print(self.host, self.port)
+        print(self.sock.getsockname())
         while True:
+            print("waiting for connections")
             client, address = self.sock.accept()
-            self.clients[client] = "username"
+            print(f"connection from {client}, {address}")
+            self.clients[client.getsockname()] = "username"
             client.settimeout(60)
-            threading.Thread(target=self.client_thread(), args=(client, address)).start()
+            threading.Thread(target=self.client_thread, args=(client, address)).start()
 
-    def client_thread(self):
-        pass
+    def client_thread(self, client, address):
+        while True:
+            try:
+                ret = self.receive_message(client)
+                if ret == 1:
+                    client.send("command received by server".encode())
+                    print(self.get_commands())
+                elif ret == 0:
+                    raise Exception
+
+            except:
+                print(client)
+                print(client.getsockname())
+                self.clients.pop(client.getsockname())
+                client.close()
+                return False
 
     def receive_message(self, client):
-        length = int(client.recv(self.HEADER_LENGTH))
-        message_id = int(client.recv(self.COMMAND_LENGTH))
-        message_content = client.recv
-        print(length, message_id)
+        header = client.recv(self.HEADER_LENGTH)
+        if not header:
+            return 0
 
+        length = int(header)
+        message_id = int(client.recv(self.COMMAND_LENGTH))
+        message_content = client.recv(length)
+
+        if message_id == 1:
+            with self.command_lock:
+                self.game_commands.append(message_content)
+            return 1
+
+    def get_commands(self):
+        with self.command_lock:
+            return self.game_commands
+
+    def clear_commands(self):
+        with self.command_lock:
+            self.game_commands = list()
+
+
+class SocketClient:
+    HEADER_LENGTH = 10
+    COMMAND_LENGTH = 3
+
+    def __init__(self, host, port):
+        self.host = host
+        self.port = port
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.connect((self.host, self.port))
+
+    def send_command(self, command):
+        content = command.encode()
+        header = f"{len(content):<{self.HEADER_LENGTH}}".encode()
+        id = f"{1:<{self.COMMAND_LENGTH}}".encode()
+
+        self.sock.send(header + id + content)
+        print(self.sock.recv(100).decode())
