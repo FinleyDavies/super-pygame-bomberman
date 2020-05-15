@@ -30,6 +30,8 @@
 
 import threading
 import socket
+import queue
+import command
 import time
 import json
 
@@ -49,6 +51,48 @@ def get_ip():
     return IP
 
 
+class ThreadedIO:
+    HEADER_LENGTH = 10
+    COMMAND_LENGTH = 3
+
+    def __init__(self, sock):
+        self.sock = sock
+        self.input_queue = queue.Queue()
+        self.output_queue = queue.Queue()
+
+        threading.Thread(target=self.input, args=self.sock)
+        threading.Thread(target=self.output, args=self.sock)
+
+    def input(self, sock):
+        while True:
+            header = sock.recv(self.HEADER_LENGTH)
+            if header:
+                length = int(header)
+                message_id = int(sock.recv(self.COMMAND_LENGTH))
+                message_content = sock.recv(length)
+                self.input_queue.put((message_id, message_content))
+                print(f"(ThreadedIO) Message {message_content} received from {sock.getsockname()}")
+
+            else:
+                print(f"(ThreadedIO) Empty header from {sock.getsockname()}")
+
+    def output(self, sock):
+        while True:
+            message_id, message_content = self.output_queue.get()
+
+            id_header = f"{message_id:<{self.COMMAND_LENGTH}}".encode()
+            length_header = f"{len(message_content):<{self.COMMAND_LENGTH}}".encode()
+
+            sock.send(length_header + id_header + message_content)
+            print(f"(ThreadedIO) Message {message_content} sent to {sock.getsockname()}")
+
+    def put_output(self, message_id: int, message_content: bytes):
+        self.output_queue.put((message_id, message_content))
+
+    def get_input(self):
+        return self.input_queue
+
+
 class SocketServer:
     HEADER_LENGTH = 10
     COMMAND_LENGTH = 3
@@ -58,69 +102,30 @@ class SocketServer:
             host = get_ip()
         if port == 0:
             port = 4832
+
         self.host = host
         self.port = port
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.bind((self.host, self.port))
 
-        self.clients = {}  # client: username
-
-        self.game_commands = []
-        self.command_lock = threading.Lock()
+        self.clients = {}  # client: {username: ,ThreadedIO: }
 
     def start_listening(self):
         threading.Thread(target=self.listen).start()
 
     def listen(self):
         self.sock.listen(5)
-        print(self.host, self.port)
-        print(self.sock.getsockname())
+        print(f"(SocketServer) Server started listening for connections on {self.sock.getsockname()}")
         while True:
-            print("waiting for connections")
+            print("(SocketServer) Waiting for connection")
             client, address = self.sock.accept()
-            print(f"connection from {client}, {address}")
-            self.clients[client.getsockname()] = "username"
+            print(f"(SocketServer) connection from {client}, {address}")
+
+            sock_IO = ThreadedIO(client)
+            self.clients[client.getsockname()] = {"username": "username", "sockIO": sock_IO}
             client.settimeout(60)
-            threading.Thread(target=self.client_thread, args=(client, address)).start()
 
-    def client_thread(self, client, address):
-        while True:
-            try:
-                ret = self.receive_message(client)
-                if ret == 1:
-                    client.send("command received by server".encode())
-                    print(self.get_commands())
-                elif ret == 0:
-                    raise Exception
-
-            except:
-                print(client.getsockname(), "disconnected")
-                self.clients.pop(client.getsockname())
-                client.close()
-                return False
-
-    def receive_message(self, client):
-        header = client.recv(self.HEADER_LENGTH)
-        if not header:
-            return 0
-
-        length = int(header)
-        message_id = int(client.recv(self.COMMAND_LENGTH))
-        message_content = client.recv(length)
-
-        if message_id == 1:
-            with self.command_lock:
-                self.game_commands.append(message_content)
-            return 1
-
-    def get_commands(self):
-        with self.command_lock:
-            return self.game_commands
-
-    def clear_commands(self):
-        with self.command_lock:
-            self.game_commands = list()
 
 
 class SocketClient:
