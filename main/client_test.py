@@ -2,12 +2,16 @@ from networking import SocketClient
 from command import Move
 import time
 
-host = input("host: ")
-port = int(input("port: "))
+host = "192.168.0.55"  # input("host: ")
+port = 4832  # int(input("port: "))
 
 client = SocketClient(host, port)
 
-client.send_command("hello")
-time.sleep(10)
-client.send_command("hello2")
-client.sock.close()
+
+username = input("enter username: ")
+client.send_message([1, username])
+time.sleep(5)
+client.send_message([1, f"hello from {username}"])
+time.sleep(5)
+#client.sock_io.close()
+#client.sock.close()
