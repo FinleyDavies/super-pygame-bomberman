@@ -26,6 +26,7 @@ def load_board(board_name, size):
 def handle_message(message, user, game_objects):
     if message[0] == 0:
         server.send_to_all([2, f"{user} has connected"], [user])
+        server.send_message([2, f"Welcome, {user}"])
 
     elif message[0] == 2:
         server.send_to_all(message, [user])
