@@ -55,8 +55,9 @@ class ThreadedIO:
     HEADER_LENGTH = 10
     COMMAND_LENGTH = 3
 
-    def __init__(self, sock):
+    def __init__(self, sock, adress, server=None):
         self.sock = sock
+        self.server = server
         self.connected = True
         self.input_queue = queue.Queue()
         self.output_queue = queue.Queue()
@@ -72,39 +73,32 @@ class ThreadedIO:
                     length = int(header)
                     message_id = int(sock.recv(self.COMMAND_LENGTH))
 
-                    if message_id == 998:
-                        print(f"(ThreadedIO) {sock.getsockname()} disconnected gracefully")
-                        self.connected = False
-                        self.output_queue.put([999, ""])
-                        break
-
                     message_content = sock.recv(length).decode("utf-8")
                     self.input_queue.put((message_id, message_content))
-                    print(f"(ThreadedIO {time.strftime('%H:%M:%S', time.localtime())}) Message '{message_content}' received from {sock.getsockname()}")
-                    print(f"\tMessage id: {message_id} \n\tlength: {length}")
+                    # print(f"(ThreadedIO {time.strftime('%H:%M:%S', time.localtime())}) Message '{message_content}' received from {sock.getsockname()}")
+                    # print(f"\tMessage id: {message_id} \n\tlength: {length}")
 
                 else:
                     print(f"(ThreadedIO) Empty header from {sock.getsockname()}")
+                    self.connected = False
+                    self.output_queue.put([999, ""])
+                    break
 
             except ConnectionResetError:
                 print(f"(ThreadedIO) {sock.getsockname()} disconnected unexpectedly")
-                self.connected = False
-                self.output_queue.put([999, ""])  # Stop the queue.get() in output thread blocking and close connection
+                self.close()
                 break
 
             except (OSError, ConnectionAbortedError):
-                print(f"(ThreadedIO) disconnected gracefully")
-                #self.connected = False
-                #break
+                print(f"(ThreadedIO) Server closed socket")
+                self.connected = False
+                break
 
     def output(self, sock):
         while self.connected:
             message_id, message_content = self.output_queue.get()
 
             if message_id == 999:
-                self.connected = False
-                sock.close()
-                self.input_queue.put(None)
                 break
 
             message_content = message_content.encode("utf-8")
@@ -113,26 +107,29 @@ class ThreadedIO:
             length_header = f"{len(message_content):<{self.HEADER_LENGTH}}".encode()
 
             sock.send(length_header + id_header + message_content)
-            print(f"(ThreadedIO) Message '{message_content.decode('utf-8')}' sent to {sock.getsockname()}")
+            # print(f"(ThreadedIO) Message '{message_content.decode('utf-8')}' sent to {sock.getsockname()}")
 
     def close(self):
-        self.output_queue.put((998, ""))
         self.output_queue.put((999, ""))
+        self.connected = False
+        self.sock.close()
+        if self.server is not None:
+            self.server.remove_sock_io(self)
 
     def put_output(self, message_id: int, message_content: str):
         self.output_queue.put((message_id, message_content))
 
-    def get_input(self, blocking=False):
-        # gets the next input from the input queue, returns None if queue is empty
-        if not blocking and self.input_queue.empty():
-            return None
-
+    def get_input(self):
         return self.input_queue.get()
+
+    def input_empty(self):
+        return self.input_queue.empty()
 
 
 class SocketServer:
     HEADER_LENGTH = 10
     COMMAND_LENGTH = 3
+    TIMEOUT = 60
 
     def __init__(self, host=0, port=0):
         if host == 0:
@@ -145,6 +142,7 @@ class SocketServer:
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.bind((self.host, self.port))
+        self.start_time = time.time()
 
         self.clients = {}  # client: {username: , ThreadedIO: }
 
@@ -153,23 +151,50 @@ class SocketServer:
 
     def listen(self):
         self.sock.listen(5)
-        print(f"(SocketServer) Server started listening for connections on {self.sock.getsockname()}")
+        # print(f"(SocketServer) Server started listening for connections on {self.sock.getsockname()}")
         while True:
-            print("(SocketServer) Waiting for connection")
+            # print("(SocketServer) Waiting for connection")
             client, address = self.sock.accept()
-            client.settimeout(60)
-            print(f"(SocketServer) connection from {client.getsockname()}, address: {address}")
+            client.settimeout(self.TIMEOUT)
+            # print(f"(SocketServer) connection from {client.getsockname()}, address: {address}")
 
-            sock_io = ThreadedIO(client)
-            time.sleep(3)
-            _, username = sock_io.get_input(True)
-            print(username)
-            self.clients[address] = {"username": username, "sockIO": sock_io}
+            sock_io = ThreadedIO(client, address, self)
+            _, username = sock_io.get_input()
+            while username in self.clients:
+                try:
+                    username = username[:-1] + str(int(username[-1]) + 1)
+                except ValueError:
+                    username = username + "1"
 
-    def send_to_all(self, message):
+            sock_io.put_output(0, username)
+            self.clients[username] = sock_io
+
+    def send_to_all(self, message, exclude):
         # sends the message to all clients
-        for client in self.clients.values():
-            client["sockIO"].put_output(message[0], message[1])
+        for username, sock_io in self.clients.items():
+            if username not in exclude:
+                sock_io.put_output(message[0], message[1])
+
+    def send_message(self, message, username):
+        self.clients[username].put_output(message[0], message[1])
+
+    def collect_messages(self):
+        messages = []
+        for username, client in self.clients.items():
+            while not client.input_empty():
+                messages.append((client.get_input(), username))
+        return messages
+
+    def remove_sock_io(self, to_remove):
+        for username, sock_io in self.clients.items():
+            if sock_io == to_remove:
+                client = self.clients.pop(username)
+                client.close()
+                print(self.clients)
+                break
+
+    def get_uptime(self):
+        return time.time() - self.start_time
 
     def kill(self):
         # end every ThreadedIO thread and call .join(), as well as closing all connections gracefully
@@ -185,11 +210,19 @@ class SocketClient:
         self.port = port
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect((self.host, self.port))
-        self.sock_io = ThreadedIO(self.sock)
+        self.sock_io = ThreadedIO(self.sock, (self.host, self.port))
 
     def send_message(self, message):
         self.sock_io.put_output(message[0], message[1])
-        print(f"(SocketClient) sent {message[1]}")
+        # print(f"(SocketClient) sent {message[1]}")
 
     def receive_message(self):
-        print(self.sock_io.get_input())
+        return self.sock_io.get_input()
+
+    def connect(self, username):
+        self.send_message([0, username])
+        return self.receive_message()[1]
+
+    def empty(self):
+        return self.sock_io.input_empty()
+

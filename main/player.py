@@ -2,247 +2,248 @@ import time
 
 
 class Player:
-	MOVEMENT_VECTORS = [
-		[0, -1], [-1, -1], [-1, 0], [-1, 1],
-		[0, 1], [1, 1], [1, 0], [1, -1],
-	]
+    MOVEMENT_VECTORS = [
+        [0, -1], [-1, -1], [-1, 0], [-1, 1],
+        [0, 1], [1, 1], [1, 0], [1, -1],
+    ]
 
-	PUNCH_TIME = 500
-	CORNER_THRESH = 0.5 + 0.1
+    PUNCH_TIME = 500
+    CORNER_THRESH = 0.5 + 0.1
 
-	def __init__(self, board, player_id):
-		self.player_id = player_id
+    def __init__(self, board, player_id):
+        self.player_id = player_id
 
-		self.board = board
-		self.board.add_player(self)
-		self.width, self.height = self.board.get_tile_size()
-		self.x, self.y = 0, 0
+        self.board = board
+        self.board.add_player(self)
+        self.width, self.height = self.board.get_tile_size()
+        self.x, self.y = 0, 0
 
-		self.speed = self.width // 8 // 2
-		self.bomb_count = 1
-		self.bomb_radius = 2
-		self.bombs_active = 0
-		self.bombs = []
-		self.powerups = [False, False, False, False]
-		self.movement_direction = 2  # facing downwards
-		self.control_direction = 2
-		self.is_moving = False
-		self.time_punched = 0
-		self.colour = (232, 232, 232)
-		self.last_component = 0
+        self.speed = self.width // 8 // 2
+        self.bomb_count = 1
+        self.bomb_radius = 2
+        self.bombs_active = 0
+        self.bombs = []
+        self.powerups = [False, False, False, False]
+        self.movement_direction = 2  # facing downwards
+        self.control_direction = 2
+        self.is_moving = False
+        self.time_punched = 0
+        self.colour = (232, 232, 232)
+        self.last_component = 0
 
-	def update_pos(self):
-		if self.is_moving and not self.is_punching():
-			self.change_direction()
-			# move player
-			# get all surrounding movement blocking tiles
-			# check for Rect collision
-			# check if player in "middle row" based on movement
-			# if in center, push away from tile
-			# if on edge, push to the right/left of the tile
+    def update_pos(self):
+        if self.is_moving and not self.is_punching():
+            self.change_direction()
 
-			def move(vector):
-				self.x += vector[0] * self.speed
-				self.y += vector[1] * self.speed
+            # move player
+            # get all surrounding movement blocking tiles
+            # check for Rect collision
+            # check if player in "middle row" based on movement
+            # if in center, push away from tile
+            # if on edge, push to the right/left of the tile
 
-			vec = self.MOVEMENT_VECTORS[self.movement_direction]
+            def move(vector):
+                self.x += vector[0] * self.speed
+                self.y += vector[1] * self.speed
 
-			# todo fix the bug where player gets stuck on corners when moving diagonally
-			#  - by using approach similar to below code, but switching component when entering a new tile, instead of
-			#  every frame
-			# if vec[0] != 0 and vec[1] != 0:
-			# 	if self.last_component == 0:
-			# 		move([vec[0], 0])
-			# 	else:
-			# 		move([0, vec[1]])
-			# 	self.last_component = (self.last_component + 1) % 2
-			# else:
-			# 	move(vec)
+            vec = self.MOVEMENT_VECTORS[self.movement_direction]
 
-			move(vec)
+            # todo fix the bug where player gets stuck on corners when moving diagonally
+            #  - by using approach similar to below code, but switching component when entering a new tile, instead of
+            #  every frame
+            # if vec[0] != 0 and vec[1] != 0:
+            # 	if self.last_component == 0:
+            # 		move([vec[0], 0])
+            # 	else:
+            # 		move([0, vec[1]])
+            # 	self.last_component = (self.last_component + 1) % 2
+            # else:
+            # 	move(vec)
 
-			tile_position = self.board.get_pos_in_tile((self.x, self.y))
-			index = self.board.get_index_from_pos((self.x, self.y))
+            move(vec)
 
-			# TRY 1:
-			# if self.MOVEMENT_VECTORS[self.direction][0] != 0:
-			# 	if abs(tile_position[0]) < self.CORNER_THRESH:
-			# 		pass
+            tile_position = self.board.get_pos_in_tile((self.x, self.y))
+            index = self.board.get_index_from_pos((self.x, self.y))
 
-			# TRY 2:
-			# handle directly adjacent tiles:
+            # TRY 1:
+            # if self.MOVEMENT_VECTORS[self.direction][0] != 0:
+            # 	if abs(tile_position[0]) < self.CORNER_THRESH:
+            # 		pass
 
-			# for adjacent in self.MOVEMENT_VECTORS[::2]:
-			# 	shifted = index[0] + adjacent[0], index[1] + adjacent[1]
-			# 	tile = self.board.tile_properties(shifted)
-			#
-			# 	if not tile["blocks_movement"] or :
-			# 		return 0
-			#
-			# 	if self.MOVEMENT_VECTORS[self.direction][0] != 0:
-			#
-			# 		if abs(tile_position[0]) < self.CORNER_THRESH:  # if in center of tile
-			# 			move(self.direction + 4)  # move opposite to direction
-			#
-			# 		elif tile_position > 0:  # if in top of tile
-			# 			move(0)  # move up
-			#
-			# 		elif tile_position < 0:
-			# 			move(4)  # move down
+            # TRY 2:
+            # handle directly adjacent tiles:
 
-			# handle diagonal tiles:
+            # for adjacent in self.MOVEMENT_VECTORS[::2]:
+            # 	shifted = index[0] + adjacent[0], index[1] + adjacent[1]
+            # 	tile = self.board.tile_properties(shifted)
+            #
+            # 	if not tile["blocks_movement"] or :
+            # 		return 0
+            #
+            # 	if self.MOVEMENT_VECTORS[self.direction][0] != 0:
+            #
+            # 		if abs(tile_position[0]) < self.CORNER_THRESH:  # if in center of tile
+            # 			move(self.direction + 4)  # move opposite to direction
+            #
+            # 		elif tile_position > 0:  # if in top of tile
+            # 			move(0)  # move up
+            #
+            # 		elif tile_position < 0:
+            # 			move(4)  # move down
 
-			# TRY 3:
-			# for the 3 tiles in front of player
-			# check if it blocks movement
-			# check whether player is colliding with line
-			# get left/right offset of tiles
-			# if |offset| < 1 then collision is true
-			# if |offset| < CORNER_THRESH then simply move backwards
-			# if offset < thresh and 2 spaces are free to left of tile, push to left
-			# if offset > thresh and 2 spaces free to right, push to right
-			# else push backwards
+            # handle diagonal tiles:
 
-			# TRY 4:
-			# check whether player is colliding with line in front
-			# for each of 3 tiles:
-			# get offset
-			# if |offset| < 1
-			# if offset < thresh and tiles to left are free
-			# push to left
-			# elif offset > thresh and tiles to right free
-			# push to right
-			# else push backwards
+            # TRY 3:
+            # for the 3 tiles in front of player
+            # check if it blocks movement
+            # check whether player is colliding with line
+            # get left/right offset of tiles
+            # if |offset| < 1 then collision is true
+            # if |offset| < CORNER_THRESH then simply move backwards
+            # if offset < thresh and 2 spaces are free to left of tile, push to left
+            # if offset > thresh and 2 spaces free to right, push to right
+            # else push backwards
 
-			#move([vec[0], 0])
-			if vec[0] * tile_position[0] > 0:  # if it is colliding with wall in movement direction
-				for dy in range(-1, 2):  # loop over the tiles in front
-					new_index = index[0] + vec[0], index[1] + dy
+            # TRY 4:
+            # check whether player is colliding with line in front
+            # for each of 3 tiles:
+            # get offset
+            # if |offset| < 1
+            # if offset < thresh and tiles to left are free
+            # push to left
+            # elif offset > thresh and tiles to right free
+            # push to right
+            # else push backwards
 
-					up_tile = self.board.tile_properties((new_index[0], new_index[1] - 1))
-					tile = self.board.tile_properties(new_index)
-					down_tile = self.board.tile_properties((new_index[0], new_index[1] + 1))
+            # move([vec[0], 0])
+            if vec[0] * tile_position[0] > 0:  # if it is colliding with wall in movement direction
+                for dy in range(-1, 2):  # loop over the tiles in front
+                    new_index = index[0] + vec[0], index[1] + dy
 
-					if tile["blocks_movement"]:
-						offset_y = self.y - self.board.get_pos_from_index(new_index)[1]
-						if abs(offset_y) < self.height - 1:
-							#print("hit x")
-							if abs(offset_y) > self.CORNER_THRESH * self.height:
-								if offset_y < 0 and up_tile["blocks_movement"] is False:
-									#print("up", dy)
-									move([0, -1])
-								elif offset_y > 0 and down_tile["blocks_movement"] is False:
-									#print("down", dy)
-									move([0, 1])
-								else:
-									move([-vec[0], 0])
-							else:
-								move([-vec[0], 0])
-							break
+                    up_tile = self.board.tile_properties((new_index[0], new_index[1] - 1))
+                    tile = self.board.tile_properties(new_index)
+                    down_tile = self.board.tile_properties((new_index[0], new_index[1] + 1))
 
-			#move([0, vec[1]])
-			if vec[1] * tile_position[1] > 0:  # if it is colliding with wall in movement direction
-				for dx in range(-1, 2):  # loop over the tiles in front
-					new_index = index[0] + dx, index[1] + vec[1]
+                    if tile["blocks_movement"]:
+                        offset_y = self.y - self.board.get_pos_from_index(new_index)[1]
+                        if abs(offset_y) < self.height - 1:
+                            # print("hit x")
+                            if abs(offset_y) > self.CORNER_THRESH * self.height:
+                                if offset_y < 0 and up_tile["blocks_movement"] is False:
+                                    # print("up", dy)
+                                    move([0, -1])
+                                elif offset_y > 0 and down_tile["blocks_movement"] is False:
+                                    # print("down", dy)
+                                    move([0, 1])
+                                else:
+                                    move([-vec[0], 0])
+                            else:
+                                move([-vec[0], 0])
+                            break
 
-					left_tile = self.board.tile_properties((new_index[0] - 1, new_index[1]))
-					tile = self.board.tile_properties(new_index)
-					right_tile = self.board.tile_properties((new_index[0] + 1, new_index[1]))
+            # move([0, vec[1]])
+            if vec[1] * tile_position[1] > 0:  # if it is colliding with wall in movement direction
+                for dx in range(-1, 2):  # loop over the tiles in front
+                    new_index = index[0] + dx, index[1] + vec[1]
 
-					if tile["blocks_movement"]:
-						offset_x = self.x - self.board.get_pos_from_index(new_index)[0]
-						if abs(offset_x) < self.width - 1:
-							#print("hit y")
-							if abs(offset_x) > self.CORNER_THRESH * self.width:
-								if offset_x < 0 and left_tile["blocks_movement"] is False:
-									#print("left", dx)
-									move([-1, 0])
-								elif offset_x >= 0 and right_tile["blocks_movement"] is False:
-									#print("right", dx)
-									move([1, 0])
-								else:
-									move([0, -vec[1]])
-							else:
-								move([0, -vec[1]])
-							break
+                    left_tile = self.board.tile_properties((new_index[0] - 1, new_index[1]))
+                    tile = self.board.tile_properties(new_index)
+                    right_tile = self.board.tile_properties((new_index[0] + 1, new_index[1]))
 
-	def change_direction(self):
-		# todo approach to both fix getting stuck and emulate original Super Bomberman movement
-		#  use more checks eg surrounding tiles, and whether change is perp or parallel to previous direction
-		x, y = self.board.get_pos_in_tile((self.x, self.y))
-		#if abs(x) < 0.25 and abs(y) < 0.25:
-		self.movement_direction = self.control_direction
+                    if tile["blocks_movement"]:
+                        offset_x = self.x - self.board.get_pos_from_index(new_index)[0]
+                        if abs(offset_x) < self.width - 1:
+                            # print("hit y")
+                            if abs(offset_x) > self.CORNER_THRESH * self.width:
+                                if offset_x < 0 and left_tile["blocks_movement"] is False:
+                                    # print("left", dx)
+                                    move([-1, 0])
+                                elif offset_x >= 0 and right_tile["blocks_movement"] is False:
+                                    # print("right", dx)
+                                    move([1, 0])
+                                else:
+                                    move([0, -vec[1]])
+                            else:
+                                move([0, -vec[1]])
+                            break
 
-	def place_bomb(self):
-		if self.bombs_active < self.bomb_count:
-			self.bombs.append(Bomb(self))
-			self.bomb_count += 1
+    def change_direction(self):
+        # todo approach to both fix getting stuck and emulate original Super Bomberman movement
+        #  use more checks eg surrounding tiles, and whether change is perp or parallel to previous direction
+        x, y = self.board.get_pos_in_tile((self.x, self.y))
+        # if abs(x) < 0.25 and abs(y) < 0.25:
+        self.movement_direction = self.control_direction
 
-	def punch(self):
-		self.time_punched = time.time()
+    def place_bomb(self):
+        if self.bombs_active < self.bomb_count:
+            self.bombs.append(Bomb(self))
+            self.bomb_count += 1
 
-	def set_pos(self, pos):
-		self.x, self.y = pos
+    def punch(self):
+        self.time_punched = time.time()
 
-	def set_tile_pos(self, index):
-		width, height = self.board.get_tile_size()
-		self.set_pos((int((index[0] + 0.5) * width), int((index[1] + 0.5) * height)))
+    def set_pos(self, pos):
+        self.x, self.y = pos
 
-	def is_punching(self):
-		return (time.time() - self.time_punched * 1000) < self.PUNCH_TIME
+    def set_tile_pos(self, index):
+        width, height = self.board.get_tile_size()
+        self.set_pos((int((index[0] + 0.5) * width), int((index[1] + 0.5) * height)))
 
-	def remove_bomb(self, bomb):
-		self.bombs.remove(bomb)
-		self.bomb_count -= 1
+    def is_punching(self):
+        return (time.time() - self.time_punched * 1000) < self.PUNCH_TIME
 
-	def has_remote_detonation(self):
-		return self.powerups[2]
+    def remove_bomb(self, bomb):
+        self.bombs.remove(bomb)
+        self.bomb_count -= 1
 
-	def get_bomb_radius(self):
-		return self.bomb_radius
+    def has_remote_detonation(self):
+        return self.powerups[2]
 
-	def set_direction(self, direction):
-		self.control_direction = direction
+    def get_bomb_radius(self):
+        return self.bomb_radius
 
-	def set_is_moving(self, is_moving):
-		self.is_moving = is_moving
+    def set_direction(self, direction):
+        self.control_direction = direction
 
-	def get_direction(self):
-		return self.movement_direction
+    def set_is_moving(self, is_moving):
+        self.is_moving = is_moving
 
-	def get_is_moving(self):
-		return self.is_moving
+    def get_direction(self):
+        return self.movement_direction
 
-	def get_pos(self):
-		return self.x, self.y
+    def get_is_moving(self):
+        return self.is_moving
 
-	def get_colour(self):
-		return self.colour
+    def get_pos(self):
+        return self.x, self.y
 
-	def get_tile_pos(self):
-		return self.board.get_index_from_pos((self.x, self.y))
+    def get_colour(self):
+        return self.colour
 
-	def get_id(self):
-		return self.player_id
+    def get_tile_pos(self):
+        return self.board.get_index_from_pos((self.x, self.y))
 
-	def get_size(self):
-		return self.width, self.height
+    def get_id(self):
+        return self.player_id
+
+    def get_size(self):
+        return self.width, self.height
 
 
 class Bomb:
-	def __init__(self, owner):
-		self.time_created = time.time()
-		self.owner = owner
-		self.x, self.y = self.owner.get_pos()
-		self.fuse_time = 2.5
-		self.radius = self.owner.get_bomb_radius()
+    def __init__(self, owner):
+        self.time_created = time.time()
+        self.owner = owner
+        self.x, self.y = self.owner.get_pos()
+        self.fuse_time = 2.5
+        self.radius = self.owner.get_bomb_radius()
 
-	def tick(self):
-		delta = time.time() - self.time_created
-		if delta > self.fuse_time:
-			self.explode()
+    def tick(self):
+        delta = time.time() - self.time_created
+        if delta > self.fuse_time:
+            self.explode()
 
-	def explode(self):
-		self.owner.remove_bomb(self)
-		tile_x, tile_y = self.owner.board.get_index_from_pos((self.x, self.y))
-		self.owner.board.create_explosion((tile_x, tile_y))
+    def explode(self):
+        self.owner.remove_bomb(self)
+        tile_x, tile_y = self.owner.board.get_index_from_pos((self.x, self.y))
+        self.owner.board.create_explosion((tile_x, tile_y))
