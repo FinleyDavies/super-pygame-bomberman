@@ -75,8 +75,8 @@ class ThreadedIO:
 
                     message_content = sock.recv(length).decode("utf-8")
                     self.input_queue.put((message_id, message_content))
-                    # print(f"(ThreadedIO {time.strftime('%H:%M:%S', time.localtime())}) Message '{message_content}' received from {sock.getsockname()}")
-                    # print(f"\tMessage id: {message_id} \n\tlength: {length}")
+                    print(f"(ThreadedIO {time.strftime('%H:%M:%S', time.localtime())}) Message '{message_content}' received from {sock.getsockname()}")
+                    print(f"\tMessage id: {message_id} \n\tlength: {length}")
 
                 else:
                     print(f"(ThreadedIO) Empty header from {sock.getsockname()}")
@@ -107,7 +107,7 @@ class ThreadedIO:
             length_header = f"{len(message_content):<{self.HEADER_LENGTH}}".encode()
 
             sock.send(length_header + id_header + message_content)
-            # print(f"(ThreadedIO) Message '{message_content.decode('utf-8')}' sent to {sock.getsockname()}")
+            print(f"(ThreadedIO) Message '{message_content.decode('utf-8')}' sent to {sock.getsockname()}")
 
     def close(self):
         self.output_queue.put((999, ""))
