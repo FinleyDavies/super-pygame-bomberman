@@ -113,6 +113,7 @@ class ThreadedIO:
         self.output_queue.put((999, ""))
         self.connected = False
         self.sock.close()
+        print("closing connection")
         if self.server is not None:
             self.server.remove_sock_io(self)
 
@@ -140,7 +141,7 @@ class SocketServer:
         self.host = host
         self.port = port
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        #self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.bind((self.host, self.port))
         self.start_time = time.time()
 
@@ -186,10 +187,14 @@ class SocketServer:
         return messages
 
     def remove_sock_io(self, to_remove):
+        print(f"removing {to_remove} from server")
+        print(self.clients)
         for username, sock_io in self.clients.items():
             if sock_io == to_remove:
+                print(f"sockio username is {username}")
                 client = self.clients.pop(username)
-                client.close()
+                if sock_io.connected:
+                    client.close()
                 print(self.clients)
                 break
 
@@ -205,12 +210,13 @@ class SocketClient:
     HEADER_LENGTH = 10
     COMMAND_LENGTH = 3
 
-    def __init__(self, host, port):
+    def __init__(self, host, port, username):
         self.host = host
         self.port = port
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.connect((self.host, self.port))
         self.sock_io = ThreadedIO(self.sock, (self.host, self.port))
+        self.username = self._connect(username)
 
     def send_message(self, message):
         self.sock_io.put_output(message[0], message[1])
@@ -219,10 +225,13 @@ class SocketClient:
     def receive_message(self):
         return self.sock_io.get_input()
 
-    def connect(self, username):
+    def _connect(self, username):
         self.send_message([0, username])
         return self.receive_message()[1]
 
     def empty(self):
         return self.sock_io.input_empty()
+
+    def get_username(self):
+        return self.username
 

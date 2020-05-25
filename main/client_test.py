@@ -7,10 +7,12 @@ import board
 import os
 import threading
 
-host = "192.168.0.91"  # input("host: ")
+host = "192.168.0.55"  # input("host: ")
 port = 4832  # int(input("port: "))
 
-client = SocketClient(host, port)
+username = input("enter username: ")
+client = SocketClient(host, port, username)
+username = client.get_username()
 
 
 path = os.path.abspath(os.path.join("..", "Boards", "Arena2.txt"))
@@ -27,8 +29,6 @@ def input_thread(callback, username):
         callback(f"{username}: {message}")
 
 
-username = input("enter username: ")
-username = client.connect(username)
 client.send_message([0, username])
 player1 = player.Player(board, username)
 threading.Thread(target=input_thread, args=(input_callback, username)).start()
