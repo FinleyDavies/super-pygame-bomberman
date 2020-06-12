@@ -10,7 +10,8 @@ class Player:
     PUNCH_TIME = 500
     CORNER_THRESH = 0.5 + 0.1
 
-    def __init__(self, board, player_id):
+    def __init__(self, board, player_name, player_id):
+        self.player_name = player_name
         self.player_id = player_id
 
         self.board = board
@@ -224,7 +225,7 @@ class Player:
         return self.board.get_index_from_pos((self.x, self.y))
 
     def get_id(self):
-        return self.player_id
+        return self.player_name
 
     def get_size(self):
         return self.width, self.height

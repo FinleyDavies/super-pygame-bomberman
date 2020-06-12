@@ -4,10 +4,10 @@ import pygame
 from sprite import SpriteSheet, Animation
 from player import Player, Bomb
 from board import Board
-from command import *
+from game_commands import *
 
 SPRITES_FOLDER = "Super_Bomberman_SNES"
-BOARD = "Arena2.txt"
+BOARD = "Arena1.txt"
 WIDTH, HEIGHT = (15 * 16 * 3, 13 * 16 * 3)
 # WIDTH, HEIGHT = 700, 500
 KEYS = [pygame.K_w, pygame.K_a, pygame.K_s, pygame.K_d]
@@ -27,7 +27,7 @@ def load_sprites(folder):
 
 def load_board(board_name, size):
     path = os.path.abspath(os.path.join("..", "Boards", board_name))
-    return Board(path, size, "board")
+    return Board(path, "board", size)
 
 
 def create_animations(players, tiles, powerups):
@@ -137,16 +137,11 @@ def draw_player(surface, player):
 def main():
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
-    board_surface = pygame.Surface((WIDTH, HEIGHT))
     clock = pygame.time.Clock()
 
     sprites = load_sprites(SPRITES_FOLDER)
     player_animations = create_animations(*sprites)
 
-    board = load_board(BOARD, (WIDTH, HEIGHT))
-    player = Player(board, "player1")
-    player.set_tile_pos((1, 1))
-    # player2 = Player(board,
 
     command_queue = []
 

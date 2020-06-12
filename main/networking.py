@@ -31,7 +31,7 @@
 import threading
 import socket
 import queue
-import command
+import game_commands
 import time
 import json
 
@@ -73,7 +73,8 @@ class ThreadedIO:
                     length = int(header)
                     message_id = int(sock.recv(self.COMMAND_LENGTH))
 
-                    message_content = sock.recv(length).decode("utf-8")
+                    message_content = sock.recv(length)
+                    message_content = message_content.decode("utf-8")
                     self.input_queue.put((message_id, message_content))
                     print(f"(ThreadedIO {time.strftime('%H:%M:%S', time.localtime())}) Message '{message_content}' received from {sock.getsockname()}")
                     print(f"\tMessage id: {message_id} \n\tlength: {length}")
@@ -101,10 +102,11 @@ class ThreadedIO:
             if message_id == 999:
                 break
 
+            message_content = message_content
             message_content = message_content.encode("utf-8")
 
-            id_header = f"{message_id:<{self.COMMAND_LENGTH}}".encode()
-            length_header = f"{len(message_content):<{self.HEADER_LENGTH}}".encode()
+            id_header = f"{message_id:<{self.COMMAND_LENGTH}}".encode("utf-8")
+            length_header = f"{len(message_content):<{self.HEADER_LENGTH}}".encode("utf-8")
 
             sock.send(length_header + id_header + message_content)
             print(f"(ThreadedIO) Message '{message_content.decode('utf-8')}' sent to {sock.getsockname()}")

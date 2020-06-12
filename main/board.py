@@ -1,39 +1,50 @@
 import json
-from command import UpdateTile
+from game_commands import UpdateTile
+from io import StringIO
+from random import randint as ran
 
 
 class Board:
     tiles = json.load(open("tiles.json", "r"))
     supported_symbols = [value["symbol"] for value in tiles.values()]
+    SPAWN_CHAR = 'X'
 
-    def __init__(self, path, window_size, board_id):
+    def __init__(self, board_file, board_name, window_size=None):
         self.players = []
-        self.board = self._load_file(path)
-        self.width, self.height = window_size
+        self.spawn_points = list()
+        self.string = ""
+        self.board = self._load_file(board_file)
         self.rows = len(self.board)
         self.cols = len(self.board[0])
-        self.board_id = board_id
+        if window_size is None:
+            window_size = self.cols * 48, self.rows * 48
+        self.width, self.height = window_size
+        self.board_name = board_name
 
         self.tile_width = self.width // self.cols
         self.tile_height = self.height // self.rows
 
         self.commands = []
+        print(self.spawn_points)
 
-    def _load_file(self, path):
+    def _load_file(self, board_file):
+        self.string = board_file.read()
+        board_file = StringIO(self.string)
         board = []
-        with open(path, "r") as board_file:
-            for line in board_file:
-                row = []
-                for char in line.strip():
-                    if char in self.supported_symbols:
-                        for name, attributes in self.tiles.items():
-                            if attributes["symbol"] == char:
-                                row.append(name)
-                                break
-                    else:
-                        row.append(Board.tiles["floor"]["name"])
+        for y, line in enumerate(board_file):
+            row = []
+            for x, char in enumerate(line.strip()):
+                if char in self.supported_symbols:
+                    for name, attributes in self.tiles.items():
+                        if attributes["symbol"] == char:
+                            row.append(name)
+                            break
+                else:
+                    if char == self.SPAWN_CHAR:
+                        self.spawn_points.append((x, y))
+                    row.append(Board.tiles["floor"]["name"])
 
-                board.append(row)
+            board.append(row)
 
         return board
 
@@ -68,6 +79,9 @@ class Board:
     def tile_is_occupied(self, index):
         pass
 
+    def get_max_players(self):
+        return len(self.spawn_points)
+
     def get_index_from_pos(self, pos):
         return pos[0] // self.tile_width, pos[1] // self.tile_height
 
@@ -99,7 +113,7 @@ class Board:
         pass
 
     def get_id(self):
-        return self.board_id
+        return self.board_name
 
 
 if __name__ == "__main__":
@@ -111,10 +125,10 @@ if __name__ == "__main__":
 
     def load_board(board_name, size):
         path = os.path.abspath(os.path.join("..", "Boards", board_name))
-        return Board(path, size)
+        return Board(path, "board", size)
 
 
-    board = load_board(BOARD, (WIDTH, HEIGHT))
+    board = load_board(BOARD, "board")
 
     for row in board.board:
         for tile in row:

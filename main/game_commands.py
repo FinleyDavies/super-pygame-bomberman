@@ -27,6 +27,11 @@ class Command(metaclass=ABCMeta):
         return f"{self.__class__.__name__}({self.target}, {self.kwargs})"
 
 
+class Dummy(Command):
+    def execute(self):
+        pass
+
+
 class Move(Command):
     def __init__(self, target, direction):
         super().__init__(target, direction=direction)
@@ -35,6 +40,16 @@ class Move(Command):
     def execute(self):
         self.target.set_direction(self.direction)
         self.target.set_is_moving(True)
+
+
+class SetPosition(Command):
+    def __init__(self, target, x_pos, y_pos):
+        super().__init__(target, x_pos=x_pos, y_pos=y_pos)
+        self.x_pos = x_pos
+        self.y_pos = y_pos
+
+    def execute(self):
+        self.target.set_tile_pos((self.x_pos, self.y_pos))
 
 
 class Stop(Command):
@@ -70,5 +85,9 @@ for name, cls in getmembers(modules[__name__], isclass):
 
 def deserialize(serialized, game_objects):
     serialized = json.loads(serialized)
-    target = game_objects[serialized["target"]]
+    try:
+        target = game_objects[serialized["target"]]
+    except KeyError:
+        return Dummy(None)
+
     return commands_dict[serialized["command_name"]](target, **serialized["args"])

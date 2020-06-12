@@ -1,7 +1,7 @@
 import json
 import sys
 import inspect
-from main.command import Move
+from main.game_commands import Move
 
 m = Move(1, 2)
 print("m", m.__class__(1, 2).__class__(1, 3))

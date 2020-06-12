@@ -1,5 +1,5 @@
 from networking import SocketClient
-from command import Move
+from game_commands import Move
 import time
 from random import randint as ran
 import player

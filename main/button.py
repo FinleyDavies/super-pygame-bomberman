@@ -2,14 +2,14 @@ import pygame
 from time import time, sleep
 from threading import Thread
 
-pygame.font.init()
+#pygame.font.init()
 
 
 class Button:
     FONT = pygame.font.get_default_font()
     HIGHLIGHT_SHIFT = 20
     COLOUR = (230, 230, 230)
-    PRESS_TIME = 0.5
+    PRESS_TIME = 0.1
 
     def __init__(self, surface, rect, text="", callback=None, colour=None, font_name=None):
         self.parent_surface = surface
@@ -72,8 +72,8 @@ class Button:
             self.time_pressed = time()
             self.is_pressed = True
             if self.callback:
-                Thread(target=self.callback).start()
-                #self.callback()
+                #Thread(target=self.callback).start()
+                self.callback()
 
 
 if __name__ == "__main__":
@@ -113,11 +113,10 @@ if __name__ == "__main__":
 
         def rem(f):
             for button in buttons:
-                if button.font_name == "microsoftnewtailue":
+                if button.font_name == f:
                     buttons.remove(button)
-                    sleep(0.5)
 
-        button = Button(screen, button_rect, f"testing {i}", font_name="microsoftnewtailue", colour=button_colour, callback=lambda f=font: rem(f))
+        button = Button(screen, button_rect, f"testing {i}", font_name=font, colour=button_colour)#, callback=lambda f=font: rem(f))
         buttons.append(button)
 
     while True:
