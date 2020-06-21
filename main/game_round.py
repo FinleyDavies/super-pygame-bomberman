@@ -4,6 +4,7 @@ import player
 import os
 import board
 
+
 class GameRound:
     GAME_LENGTH = 60 * 2
     WARMUP_LENGTH = 30
@@ -38,3 +39,13 @@ class GameRound:
 
     def load_board(self, board_file):
         return board.Board(board_file, "game_board")
+
+    def update(self):
+        while not self.command_queue.empty():
+            self.command_queue.get().execute()
+
+
+if __name__ == "__main__":
+    BOARD = "Arena1.txt"
+    round1 = GameRound(BOARD)
+    round1.add_player("player_1")

@@ -1,4 +1,5 @@
 import time
+from random import random, randint
 
 
 class Player:
@@ -178,7 +179,7 @@ class Player:
     def place_bomb(self):
         if self.bombs_active < self.bomb_count:
             self.bombs.append(Bomb(self))
-            self.bomb_count += 1
+            self.bombs_active += 1
 
     def punch(self):
         self.time_punched = time.time()
@@ -232,19 +233,46 @@ class Player:
 
 
 class Bomb:
+    dud_chance = 0.05
+    chain_time = 0.2  # delay between explosions in chain reactions
+
     def __init__(self, owner):
         self.time_created = time.time()
         self.owner = owner
         self.x, self.y = self.owner.get_pos()
         self.fuse_time = 2.5
         self.radius = self.owner.get_bomb_radius()
+        self.inactive = False
+        self.dud_time = 0
+
+        self.in_flame = False
+        self.flame_time = 0
+
+        if random() < self.dud_chance:
+            self.inactive = True
+            self.dud_time = randint(5, 15)
 
     def tick(self):
+        if self.fuse_time <= 0:
+            return
+
         delta = time.time() - self.time_created
-        if delta > self.fuse_time:
+
+        if self.inactive and delta > self.dud_time:
+            self.inactive = False
+            self.time_created = time.time()
+
+        if not self.inactive and delta > self.fuse_time:
             self.explode()
 
+    def inside_flame(self):
+        self.in_flame = True
+        self.flame_time = time.time()
+
     def explode(self):
-        self.owner.remove_bomb(self)
+        self.destroy()
         tile_x, tile_y = self.owner.board.get_index_from_pos((self.x, self.y))
-        self.owner.board.create_explosion((tile_x, tile_y))
+        self.owner.board.create_explosion((tile_x, tile_y), self.radius)
+
+    def destroy(self):
+        self.owner.remove_bomb(self)

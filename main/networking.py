@@ -76,7 +76,8 @@ class ThreadedIO:
                     message_content = sock.recv(length)
                     message_content = message_content.decode("utf-8")
                     self.input_queue.put((message_id, message_content))
-                    print(f"(ThreadedIO {time.strftime('%H:%M:%S', time.localtime())}) Message '{message_content}' received from {sock.getsockname()}")
+                    print(
+                        f"(ThreadedIO {time.strftime('%H:%M:%S', time.localtime())}) Message '{message_content}' received from {sock.getsockname()}")
                     print(f"\tMessage id: {message_id} \n\tlength: {length}")
 
                 else:
@@ -143,7 +144,7 @@ class SocketServer:
         self.host = host
         self.port = port
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        #self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        # self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.bind((self.host, self.port))
         self.start_time = time.time()
 
@@ -236,4 +237,3 @@ class SocketClient:
 
     def get_username(self):
         return self.username
-

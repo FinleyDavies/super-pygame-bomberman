@@ -10,11 +10,10 @@ import random
 import time
 import os
 
-
 CPS = 60
 
 
-def handle_messages(server, game:game_round.GameRound):
+def handle_messages(server, game: game_round.GameRound):
     for message, user in server.collect_messages():
 
         if message[0] == 0:  # on connection, alert all players in chat, send all game objects to player
@@ -22,7 +21,6 @@ def handle_messages(server, game:game_round.GameRound):
             server.send_message([1, f"Welcome, {user}"], user)
 
             server.send_message([3, game.board.string])
-            game.a
 
         elif message[0] == 1:
             server.send_to_all(message, [user])
@@ -33,18 +31,13 @@ def handle_messages(server, game:game_round.GameRound):
 
 def main():
     actual_cps = 0
-
     server = SocketServer()
     server.start_listening()
-
     game_objects = list()
-
     roll_over = 0
     cycles_elapsed = 0
     while True:
         start_time = time.time()
-
-
 
         # ---- CYCLE TIMING LOGIC --------------------------------------------------
         time_delta = time.time() - start_time
@@ -55,6 +48,7 @@ def main():
             roll_over = abs(sleep_time)
         cycles_elapsed += 1
         actual_cps = cycles_elapsed / server.get_uptime()
+
 
 if __name__ == "__main__":
     main()

@@ -73,8 +73,16 @@ class Board:
         self.commands.append(UpdateTile(self, index, "flame"))
         return False
 
+    def update_bomb_positions(self):
+        # Bombs are both tiles and objects
+        bomb_positions = [(bomb.x, bomb.y) for player in self.players for bomb in player.bombs]
+        print(bomb_positions)
+
     def set_tile(self, index, tile):
         self.board[index[1]][index[0]] = tile
+
+    def set_tile_by_name(self, index, tile_name):
+        self.board[index[1]][index[0]] = self.tiles[tile_name]["name"]
 
     def tile_is_occupied(self, index):
         pass
@@ -106,11 +114,9 @@ class Board:
         self.players.append(player)
 
     def get_updates(self):
-        """
-        returns list of all tile updates for use of the graphical display
-        :return:
-        """
-        pass
+        commands = self.commands[:]
+        self.commands = []
+        return commands
 
     def get_id(self):
         return self.board_name
@@ -123,12 +129,13 @@ if __name__ == "__main__":
     WIDTH, HEIGHT = (15 * 16 * 3, 13 * 16 * 3)
 
 
-    def load_board(board_name, size):
-        path = os.path.abspath(os.path.join("..", "Boards", board_name))
-        return Board(path, "board", size)
+    def load_board(file_name, board_name, size):
+        path = os.path.abspath(os.path.join("..", "Boards", file_name))
+        file = open(path, "r")
+        return Board(file, board_name, size)
 
 
-    board = load_board(BOARD, "board")
+    board = load_board(BOARD, "board", (WIDTH, HEIGHT))
 
     for row in board.board:
         for tile in row:
