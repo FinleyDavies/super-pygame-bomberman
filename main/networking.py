@@ -76,12 +76,12 @@ class ThreadedIO:
                     message_content = sock.recv(length)
                     message_content = message_content.decode("utf-8")
                     self.input_queue.put((message_id, message_content))
-                    print(
-                        f"(ThreadedIO {time.strftime('%H:%M:%S', time.localtime())}) Message '{message_content}' received from {sock.getsockname()}")
-                    print(f"\tMessage id: {message_id} \n\tlength: {length}")
+                    # print(
+                    #     f"(ThreadedIO {time.strftime('%H:%M:%S', time.localtime())}) Message '{message_content}' received from {sock.getsockname()}")
+                    # print(f"\tMessage id: {message_id} \n\tlength: {length}")
 
                 else:
-                    print(f"(ThreadedIO) Empty header from {sock.getsockname()}")
+                    # print(f"(ThreadedIO) Empty header from {sock.getsockname()}")
                     self.connected = False
                     self.output_queue.put([999, ""])
                     break
@@ -110,7 +110,7 @@ class ThreadedIO:
             length_header = f"{len(message_content):<{self.HEADER_LENGTH}}".encode("utf-8")
 
             sock.send(length_header + id_header + message_content)
-            print(f"(ThreadedIO) Message '{message_content.decode('utf-8')}' sent to {sock.getsockname()}")
+            # print(f"(ThreadedIO) Message '{message_content.decode('utf-8')}' sent to {sock.getsockname()}")
 
     def close(self):
         self.output_queue.put((999, ""))
@@ -173,14 +173,18 @@ class SocketServer:
             sock_io.put_output(0, username)
             self.clients[username] = sock_io
 
-    def send_to_all(self, message, exclude):
+    def send_to_all(self, message, exclude=None):
+        print(message)
+        exclude = [] if exclude is None else exclude
         # sends the message to all clients
         for username, sock_io in self.clients.items():
             if username not in exclude:
                 sock_io.put_output(message[0], message[1])
 
-    def send_message(self, message, username):
-        self.clients[username].put_output(message[0], message[1])
+    def send_message(self, message, usernames):
+        print(message)
+        for username in usernames:
+            self.clients[username].put_output(message[0], message[1])
 
     def collect_messages(self):
         messages = []

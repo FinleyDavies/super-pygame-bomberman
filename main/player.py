@@ -19,6 +19,7 @@ class Player:
         self.board.add_player(self)
         self.width, self.height = self.board.get_tile_size()
         self.x, self.y = 0, 0
+        self.is_alive = True
 
         self.speed = self.width // 8 // 2
         self.bomb_count = 1
@@ -230,6 +231,9 @@ class Player:
 
     def get_size(self):
         return self.width, self.height
+
+    def set_alive(self, is_alive):
+        self.is_alive = is_alive
 
 
 class Bomb:

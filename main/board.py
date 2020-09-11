@@ -25,7 +25,14 @@ class Board:
         self.tile_height = self.height // self.rows
 
         self.commands = []
-        print(self.spawn_points)
+        # print(self.spawn_points)
+
+    @classmethod
+    def from_file_name(cls, board_name, window_size=None):
+        path = os.path.abspath(os.path.join("..", "Boards", board_name))
+        board_file = open(path, "r")
+        board_name = board_name.replace(".txt", "")
+        return cls(board_file, board_name, window_size)
 
     def _load_file(self, board_file):
         self.string = board_file.read()
@@ -135,7 +142,7 @@ if __name__ == "__main__":
         return Board(file, board_name, size)
 
 
-    board = load_board(BOARD, "board", (WIDTH, HEIGHT))
+    board = Board.from_file_name("Arena1.txt", (WIDTH, HEIGHT))
 
     for row in board.board:
         for tile in row:

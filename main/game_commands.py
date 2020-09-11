@@ -77,6 +77,16 @@ class UpdateTile(Command):
         self.target.set_tile(self.index, self.tile)
 
 
+class SetAlive(Command):
+    def __init__(self, target, is_alive):
+        super().__init__(target, is_alive=is_alive)
+        self.is_alive = is_alive
+
+    def execute(self):
+        self.target.set_alive(self.is_alive)
+
+
+# Automatically create a dictionary containing references to Command objects in this file with keys of their name
 commands_dict = {}
 for name, cls in getmembers(modules[__name__], isclass):
     if getmodule(cls) == modules[__name__]:
@@ -84,6 +94,11 @@ for name, cls in getmembers(modules[__name__], isclass):
 
 
 def deserialize(serialized, game_objects):
+    """
+    :bytes serialized: json bytestring resulting from .serialize being called on a subclass of Command
+    :dict game_objects: dictionary passed from main game loop in form {playerid, Player object}
+    :return Command: Command object identical to pre-serialized command
+    """
     serialized = json.loads(serialized)
     try:
         target = game_objects[serialized["target"]]
