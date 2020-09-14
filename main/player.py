@@ -11,14 +11,16 @@ class Player:
     PUNCH_TIME = 500
     CORNER_THRESH = 0.5 + 0.1
 
+    COLOURS = [(232, 232, 232), (32, 32, 232), (232, 32, 32), (32, 32, 32)]
+
     def __init__(self, board, player_name, player_id):
         self.player_name = player_name
-        self.player_id = player_id
+        self.player_id = player_id # Number 1-4 to determine colour of player
 
         self.board = board
         self.board.add_player(self)
         self.width, self.height = self.board.get_tile_size()
-        self.x, self.y = 0, 0
+        self.x, self.y = 50, 50
         self.is_alive = True
 
         self.speed = self.width // 8 // 2
@@ -31,7 +33,7 @@ class Player:
         self.control_direction = 2
         self.is_moving = False
         self.time_punched = 0
-        self.colour = (232, 232, 232)
+        self.colour = self.COLOURS[self.player_id % 4]
         self.last_component = 0
 
     def update_pos(self):

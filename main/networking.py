@@ -34,9 +34,12 @@ import queue
 import game_commands
 import time
 import json
+from collections import OrderedDict
 
 
 # todo completely redo with either select or asyncio
+
+# todo fix problem where timed out clients are not removed from client list in SocketServer
 
 def get_ip():
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -133,7 +136,7 @@ class ThreadedIO:
 class SocketServer:
     HEADER_LENGTH = 10
     COMMAND_LENGTH = 3
-    TIMEOUT = 60
+    TIMEOUT = 600
 
     def __init__(self, host=0, port=0):
         if host == 0:
@@ -148,7 +151,8 @@ class SocketServer:
         self.sock.bind((self.host, self.port))
         self.start_time = time.time()
 
-        self.clients = {}  # client: {username: , ThreadedIO: }
+        self.clients = OrderedDict()  # client: {username: , ThreadedIO: }
+        # using ordereddict to preserve order in which players join, and decide their colour and player no accordingly
 
     def start_listening(self):
         threading.Thread(target=self.listen).start()
@@ -174,7 +178,7 @@ class SocketServer:
             self.clients[username] = sock_io
 
     def send_to_all(self, message, exclude=None):
-        print(message)
+        # print(message)
         exclude = [] if exclude is None else exclude
         # sends the message to all clients
         for username, sock_io in self.clients.items():
@@ -182,7 +186,7 @@ class SocketServer:
                 sock_io.put_output(message[0], message[1])
 
     def send_message(self, message, usernames):
-        print(message)
+        # print(message)
         for username in usernames:
             self.clients[username].put_output(message[0], message[1])
 
@@ -212,6 +216,9 @@ class SocketServer:
         # end every ThreadedIO thread and call .join(), as well as closing all connections gracefully
         pass
 
+    def get_clients(self):
+        return self.clients
+
 
 class SocketClient:
     HEADER_LENGTH = 10
@@ -231,6 +238,12 @@ class SocketClient:
 
     def receive_message(self):
         return self.sock_io.get_input()
+
+    def collect_messages(self):
+        messages = []
+        while not self.empty():
+            messages.append(self.receive_message())
+        return messages
 
     def _connect(self, username):
         self.send_message([0, username])

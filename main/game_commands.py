@@ -96,7 +96,7 @@ for name, cls in getmembers(modules[__name__], isclass):
 def deserialize(serialized, game_objects):
     """
     :bytes serialized: json bytestring resulting from .serialize being called on a subclass of Command
-    :dict game_objects: dictionary passed from main game loop in form {playerid, Player object}
+    :dict game_objects: dictionary passed from main game loop in form {player_name, Player object}
     :return Command: Command object identical to pre-serialized command
     """
     serialized = json.loads(serialized)

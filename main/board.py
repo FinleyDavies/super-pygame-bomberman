@@ -1,6 +1,7 @@
 import json
 from game_commands import UpdateTile
 from io import StringIO
+import os
 from random import randint as ran
 
 
@@ -33,6 +34,11 @@ class Board:
         board_file = open(path, "r")
         board_name = board_name.replace(".txt", "")
         return cls(board_file, board_name, window_size)
+
+    @classmethod
+    def from_string(cls, board_string, window_size=None):
+        board_file = StringIO(board_string)
+        return cls(board_file, "game_board", window_size)
 
     def _load_file(self, board_file):
         self.string = board_file.read()
@@ -128,9 +134,11 @@ class Board:
     def get_id(self):
         return self.board_name
 
+    def __str__(self):
+        return self.string
+
 
 if __name__ == "__main__":
-    import os
 
     BOARD = "Arena1.txt"
     WIDTH, HEIGHT = (15 * 16 * 3, 13 * 16 * 3)

@@ -11,8 +11,7 @@ class GameRound:
     GAME_LENGTH = 60 * 2
     WARMUP_LENGTH = 30
 
-    def __init__(self, server, board_name):
-        self.server = server
+    def __init__(self, board_name):
         self.players = []
         self.spectators = []
         self.board = self.load_board(board_name)
@@ -42,7 +41,7 @@ class GameRound:
         self.command_queue.put(command)
 
     def load_board(self, board_file):
-        return board.Board(board_file, "game_board")
+        return board.Board.from_file_name(board_file)
 
     def update(self):
         while not self.command_queue.empty():
@@ -69,10 +68,8 @@ class GameRound:
         living = self.get_living_players()
         return list(set(self.players) - set(living))
 
-    def add_command(self, command):
-        # adds the command to round queue and also sends the command to all players
-        self.command_queue.put(command)
-        self.server.send_to_all()
+    def get_board(self):
+        return self.board
 
 
 if __name__ == "__main__":

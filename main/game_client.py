@@ -2,16 +2,21 @@ import os
 import pygame
 
 from sprite import SpriteSheet, Animation
+from networking import SocketClient, get_ip
 from player import Player, Bomb
 from board import Board
 from game_commands import *
 
 SPRITES_FOLDER = "Super_Bomberman_SNES"
+
 BOARD = "Arena1.txt"
 WIDTH, HEIGHT = (15 * 16 * 3, 13 * 16 * 3)
 # WIDTH, HEIGHT = 700, 500
+
 KEYS = [pygame.K_w, pygame.K_a, pygame.K_s, pygame.K_d]
 
+
+# LOAD GAME FILES ##########################################################################################
 
 def load_sprites(folder):
     players_path = os.path.abspath(os.path.join("..", "Sprites", folder, "players.png"))
@@ -51,40 +56,14 @@ def create_animations(players, tiles, powerups):
 
         death = Animation(players, [(j, i) for j in range(12, 18)], 2000, False)
 
-        player_animations["colour"]["walk"] = walk
-        player_animations["colour"]["punch"] = punch
-        player_animations["colour"]["death"] = death
+        player_animations[colour]["walk"] = walk
+        player_animations[colour]["punch"] = punch
+        player_animations[colour]["death"] = death
 
     return player_animations
 
 
-def get_command_from_keystate(keystate, player):
-    if keystate[0]:
-        if keystate[1]:
-            return Move(player, 1)
-
-        if keystate[3]:
-            return Move(player, 7)
-
-        return Move(player, 0)
-
-    elif keystate[1]:
-        if keystate[2]:
-            return Move(player, 3)
-
-        return Move(player, 2)
-
-    elif keystate[2]:
-        if keystate[3]:
-            return Move(player, 5)
-
-        return Move(player, 4)
-
-    elif keystate[3]:
-        return Move(player, 6)
-
-    return Stop(player)
-
+# DRAWING TO SCREEN ###########################################################################################
 
 def draw_board(surface, board):
     # draws board to game surface before drawing to screen - so the game can be offset to allow space for HUD
@@ -134,6 +113,57 @@ def draw_player(surface, player):
     return surface
 
 
+# COMMAND HANDLING ############################################################################################
+
+def get_command_from_keystate(keystate, player):
+    if keystate[0]:
+        if keystate[1]:
+            return Move(player, 1)
+
+        if keystate[3]:
+            return Move(player, 7)
+
+        return Move(player, 0)
+
+    elif keystate[1]:
+        if keystate[2]:
+            return Move(player, 3)
+
+        return Move(player, 2)
+
+    elif keystate[2]:
+        if keystate[3]:
+            return Move(player, 5)
+
+        return Move(player, 4)
+
+    elif keystate[3]:
+        return Move(player, 6)
+
+    return Stop(player)
+
+
+def handle_message(client, message):
+    if message[0] == 0:  # another player has connected to the server
+        print("client connected")
+
+    elif message[0] == 1:  # game command message
+        print("handling", message[1])
+
+    elif message[0] == 2:
+        print(message[1])
+
+
+def connect(host=None, port=None, username=None):
+    # returns the clients player object, the client, the board, and already connected players
+
+    host = get_ip() if host is None else host
+    port = 4832 if port is None else port
+    username = "player" if username is None else username
+    client = SocketClient(host, port, username)
+    username = client.get_username()
+    client.send_message([0, username])
+
 def main():
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -142,24 +172,28 @@ def main():
     sprites = load_sprites(SPRITES_FOLDER)
     player_animations = create_animations(*sprites)
 
-
     command_queue = []
+
+
+
 
     running = True
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+
             if event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
-                # print(player.get_pos())
                 keystate = [pygame.key.get_pressed()[key] for key in KEYS]
                 command = get_command_from_keystate(keystate, player)
                 command_queue.append(command)
-            # client.send_command(command)
 
         for command in command_queue:
             print(command)
+            client.send_message([1, command.serialize()])
             command.execute()
+
+
         command_queue = []
         player.update_pos()
         draw_board(board_surface, board)
