@@ -116,7 +116,7 @@ def main():
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     clock = pygame.time.Clock()
 
-    client, username = connect()
+    client, username = connect(host = "192.168.1.32")
     game_board = None
     player_names = []
     players = OrderedDict()

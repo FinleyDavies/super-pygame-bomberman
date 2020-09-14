@@ -53,6 +53,7 @@ def get_player_ids(server):
 def main():
     server = SocketServer()
     print(server.host)
+    print(server.port)
 
     server.start_listening()
 
