@@ -9,6 +9,7 @@ import threading
 import pygame
 from queue import Queue
 from collections import OrderedDict
+from menu import ButtonMenu
 
 
 def handle_message(client, message):
@@ -55,7 +56,7 @@ def draw_player(surface, player):
     pos = player.get_pos()
     line_end = pos[0] + player.MOVEMENT_VECTORS[player.movement_direction][0] * player.width // 2, \
                pos[1] + player.MOVEMENT_VECTORS[player.movement_direction][1] * player.height // 2
-    pygame.draw.line(surface, (232, 32, 32), pos, line_end, 2)
+    pygame.draw.line(surface, (32, 32, 32), pos, line_end, 2)
     return surface
 
 
@@ -96,6 +97,17 @@ def get_command_from_keystate(keystate, player):
 
     return Stop(player)
 
+def load_players(names, board):
+    print("Loading players")
+
+    players = OrderedDict()
+    for i, name in enumerate(names):
+        print(f"\t{name} ({i + 1})")
+        players[name] = (Player(board, name, i))
+
+    print("\nSuccessfully loaded players\n\n")
+
+    return players
 
 def connect(host=None, port=None, username=None):
     # returns the clients player object, the client, the board, and already connected players
@@ -103,53 +115,72 @@ def connect(host=None, port=None, username=None):
     host = get_ip() if host is None else host
     port = 4832 if port is None else port
     username = "player" if username is None else username
+
+    print(f"Connecting to server {host} on port {port} with username {username}")
     client = SocketClient(host, port, username)
     username = client.get_username()
+    print(f"successfully connected with username {username}\n")
+
     client.send_message([0, username])
 
-    return client, username
+    print("Loading board")
+    game_board = Board.from_string(client.receive_message()[1], (15 * 16 * 2, 13 * 16 * 2))
+    print(game_board)
+    print("Game board has been loaded\n")
+
+    names = client.receive_message()[1].split(",")
+    players = load_players(names, game_board)
+
+    return client, username, game_board, players
 
 
 def main():
     pygame.init()
-    WIDTH, HEIGHT = (15 * 16 * 3, 13 * 16 * 3)
+    WIDTH, HEIGHT = (15 * 16 * 2, 13 * 16 * 2)
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     clock = pygame.time.Clock()
 
-    client, username = connect(host = "192.168.1.32")
-    game_board = None
+    menu = ButtonMenu(screen)
+
+    client, username, game_board, players = connect(host="192.168.1.32")
     player_names = []
-    players = OrderedDict()
-    client_player = None
+    client_player = players[username]
 
     game_queue = Queue()
 
     KEYS = [pygame.K_w, pygame.K_a, pygame.K_s, pygame.K_d]
 
-    threading.Thread(target=input_thread, args=(client, input_callback, username)).start()
+    t = threading.Thread(target=input_thread, args=(client, input_callback, username), name="client chat input")
+    t.setDaemon(True)
+    t.start()
 
     warmup = True
-    while True:
+    running = True
+    while running:
         for message in client.collect_messages():
-            if message[0] == 0:  # another player has connected to the server
-                print(f"{message[1]} connected")
-                player_names.append(message[1])
 
-            elif message[0] == 1:  # game command message
-                # print("handling", message[1])
+            if message[0] == 0:     # reset player list
+                names = message[1].split(",")
+                players = load_players(names, game_board)
+                client_player = players[username]
+
+            elif message[0] == 1:   # game command
                 game_queue.put(deserialize(message[1], players))
 
-                # add message to game queue
-
-            elif message[0] == 2:   # chat
+            elif message[0] == 2:   # chat message
                 print(message[1])
 
-            elif message[0] == 3:   # board
+            elif message[0] == 3:   # board update
                 print("loaded board")
                 game_board = Board.from_string(message[1])
 
-        if game_board is None:
-            continue
+            elif message[0] == 4:   # remove player
+                del players[message[1]]
+
+            elif message[0] == 5:   # add player
+                name, id  = message[1].split(",")
+
+
 
 
 
@@ -165,8 +196,11 @@ def main():
 
 
         for event in pygame.event.get():
+            menu.update(event)
+
             if event.type == pygame.QUIT:
                 running = False
+                # pygame.quit()
 
             if event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
                 keystate = [pygame.key.get_pressed()[key] for key in KEYS]
@@ -186,11 +220,16 @@ def main():
             board_surface = draw_player(board_surface, player)
 
         screen.blit(board_surface, (0, 0))
-
+        menu.draw()
         pygame.display.update()
         screen.fill((16, 120, 48))
         clock.tick(60)
 
+    print("broken")
+    client.close()
+    print("CLOSED")
+    pygame.quit()
+    print("QUIT")
 
 
 if __name__ == "__main__":

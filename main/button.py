@@ -32,12 +32,13 @@ class Button:
             font_name = self.FONT
         self.font_name = font_name
 
+        self.font = pygame.font.Font(pygame.font.match_font(self.font_name), 20)
         self.text = text
 
-        self.font = pygame.font.Font(pygame.font.match_font(self.font_name), 20)
-        self.rendered = self.font.render(self.text, True, (10, 10, 10))
-        self.text_rect = self.rendered.get_rect()
-        self.text_rect.center = self.rect.center
+        self.rendered, self.text_rect = self.render_text()
+        self.fit_text()
+
+
 
         self.is_highlighted = False
         self.is_pressed = False
@@ -72,8 +73,27 @@ class Button:
             self.time_pressed = time()
             self.is_pressed = True
             if self.callback:
-                #Thread(target=self.callback).start()
                 self.callback()
+
+    def change_text(self, text):
+        self.text = text
+        self.render_text()
+
+    def render_text(self):
+        rendered = self.font.render(self.text, True, (10, 10, 10))
+        text_rect = rendered.get_rect()
+        text_rect.center = self.rect.center
+
+        return rendered, text_rect
+
+    def fit_text(self):
+        if self.text_rect.width > self.rect.width:
+            rect = self.text_rect.copy()
+            rect.height = self.rect.height
+            rect.center = self.rect.center
+            self.rect = rect.inflate(20, 0)
+
+
 
 
 if __name__ == "__main__":
@@ -107,16 +127,19 @@ if __name__ == "__main__":
     cols = WIDTH // (width + 5)
     print(cols)
     for i, font in enumerate(pygame.font.get_fonts()[:] + [pygame.font.get_default_font()]):
-        button_rect = pygame.rect.Rect(((width + 5) * (i % cols), (height + 5) * (i // cols), width, height))
+        button_rect = pygame.rect.Rect(((width + 5) * (i % cols), (height + 5) * (i // cols), 0, height))
         button_colour = pygame.color.Color("red")
         button_colour.hsva = ((360*(i%cols)//cols), 100, 100, 100)
+
+        def name(font):
+            print(font)
 
         def rem(f):
             for button in buttons:
                 if button.font_name == f:
                     buttons.remove(button)
 
-        button = Button(screen, button_rect, f"testing {i}", font_name=font, colour=button_colour)#, callback=lambda f=font: rem(f))
+        button = Button(screen, button_rect, f"testing {i}", font_name=font, colour=(200,200,200), callback=lambda f=font: name(f))
         buttons.append(button)
 
     while True:

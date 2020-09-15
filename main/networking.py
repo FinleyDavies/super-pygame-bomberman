@@ -65,8 +65,13 @@ class ThreadedIO:
         self.input_queue = queue.Queue()
         self.output_queue = queue.Queue()
 
-        threading.Thread(target=self.input, args=(self.sock,)).start()
-        threading.Thread(target=self.output, args=(self.sock,)).start()
+        self.t1 = threading.Thread(target=self.input, args=(self.sock,), name="ThreadedIO input")
+        self.t2 = threading.Thread(target=self.output, args=(self.sock,), name="ThreadedIO output")
+        self.t1.setDaemon(True)
+        self.t2.setDaemon(True)
+        self.t1.start()
+        self.t2.start()
+
 
     def input(self, sock):
         while self.connected:
@@ -96,7 +101,8 @@ class ThreadedIO:
 
             except (OSError, ConnectionAbortedError):
                 print(f"(ThreadedIO) Server closed socket")
-                self.connected = False
+                self.close()
+                # self.connected = False
                 break
 
     def output(self, sock):
@@ -116,10 +122,10 @@ class ThreadedIO:
             # print(f"(ThreadedIO) Message '{message_content.decode('utf-8')}' sent to {sock.getsockname()}")
 
     def close(self):
-        self.output_queue.put((999, ""))
+        # self.output_queue.put((999, ""))
         self.connected = False
         self.sock.close()
-        print("closing connection")
+        print("closing")
         if self.server is not None:
             self.server.remove_sock_io(self)
 
@@ -136,9 +142,9 @@ class ThreadedIO:
 class SocketServer:
     HEADER_LENGTH = 10
     COMMAND_LENGTH = 3
-    TIMEOUT = 600
+    TIMEOUT = 120
 
-    def __init__(self, host=0, port=0):
+    def __init__(self, dc_callback, host=0, port=0):
         if host == 0:
             host = get_ip()
         if port == 0:
@@ -146,6 +152,7 @@ class SocketServer:
 
         self.host = host
         self.port = port
+        self.dc_callback = dc_callback
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         # self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.bind((self.host, self.port))
@@ -207,7 +214,10 @@ class SocketServer:
                 if sock_io.connected:
                     client.close()
                 print(self.clients)
+                self.dc_callback(self, username)
                 break
+
+
 
     def get_uptime(self):
         return time.time() - self.start_time
@@ -254,3 +264,7 @@ class SocketClient:
 
     def get_username(self):
         return self.username
+
+    def close(self):
+        print("closing connection")
+        self.sock_io.close()

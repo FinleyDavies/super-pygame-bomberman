@@ -8,18 +8,14 @@ def handle_message(server, message, username, round):
     if message[0] == 0:  # login message
         print("client connected")
 
-        server.send_message([2, f"Welcome, {username}"], [username])
-        server.send_to_all([2, f"{username} has connected"], [username])
-
         # send board to the new client
         server.send_message([3, str(round.get_board())], [username])
 
         # send all player names and ids to the new client
-        for client in server.get_clients():
-            server.send_message([0, client], [username])
+        server.send_to_all([0, ",".join(list(server.get_clients()))])
 
-        # send new client name and id to all other clients
-        server.send_to_all([0, username], [username])
+        server.send_message([2, f"Welcome, {username}"], [username])
+        server.send_to_all([2, f"{username} has connected"], [username])
 
 
     elif message[0] == 1:   # game command message
@@ -42,16 +38,12 @@ def add_command(server, round, command):
     round.command_queue.put(command)
     server.send_to_all([1, command.serialize()])#
 
-
-def get_player_ids(server):
-    players = list()
-    for id, name in enumerate(server.get_clients()):
-        players.append([name, id])
-
-    return players
+def on_disconnect(server, username):
+    server.send_to_all([0, ",".join(list(server.get_clients()))], [username])
+    server.send_to_all([2, f"{username} has disconnected"], [username])
 
 def main():
-    server = SocketServer()
+    server = SocketServer(on_disconnect)
     print(server.host)
     print(server.port)
 
@@ -62,7 +54,6 @@ def main():
     while True:
         for message, user in server.collect_messages():
             handle_message(server, message, user, round)
-            #print(get_player_ids(server))
         sleep(1/60)
 
 if __name__ == "__main__":
