@@ -29,7 +29,7 @@ def handle_message(client, message):
 def draw_board(surface, board):
     # draws board to game surface before drawing to screen - so the game can be offset to allow space for HUD
 
-    colour_dic = {"floor": (16, 120, 48), "barrier": (64, 64, 64), "wall": (128, 128, 128)}
+    colour_dic = {"floor": (16, 120, 48), "barrier": (64, 64, 64), "wall": (128, 128, 128), "flame": (207, 53, 46)}
     board_size = board.get_size()
     tile_size = board.get_tile_size()
 
@@ -40,10 +40,16 @@ def draw_board(surface, board):
             colour = colour_dic[tile]
             pygame.draw.rect(surface, colour, pygame.Rect(x * w, y * h, w, h))
 
-    for player in board.players:
+    for player in board.players.values():
         x, y = player.get_tile_pos()
         w, h = board.get_tile_size()
         pygame.draw.rect(surface, (0, 104, 32), pygame.Rect(x * w, y * h, w, h))
+
+    # for coord in board.flames:
+    #     x, y = coord
+    #     w, h = board.get_tile_size()
+    #     pygame.draw.rect(surface, (207, 53, 46), pygame.Rect(x * w, y * h, w, h))
+
 
     return surface
 
@@ -149,6 +155,7 @@ def main():
 
     client, username, game_board, players = connect(host="192.168.1.32")
     client_player = players[username]
+    game_board.create_explosion((2, 1), 3)
 
     game_queue = Queue()
 
@@ -165,6 +172,7 @@ def main():
 
             if message[0] == 0:     # reset player list
                 names = message[1].split(",")
+                game_board.clear_players()
                 players = load_players(names, game_board)
                 client_player = players[username]
 

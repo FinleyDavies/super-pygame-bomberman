@@ -8,6 +8,7 @@ import json
 class Command(metaclass=ABCMeta):
     def __init__(self, target, **kwargs):
         self.time_created = time()
+        self.__dict__.update(kwargs)
         self.target = target
         self.kwargs = kwargs
 
@@ -35,6 +36,7 @@ class Dummy(Command):
 class Move(Command):
     def __init__(self, target, direction):
         super().__init__(target, direction=direction)
+        print(self.direction)
         self.direction = direction
 
     def execute(self):
@@ -67,6 +69,27 @@ class Punch(Command):
         self.target.punch()
 
 
+class SetAlive(Command):
+    def __init__(self, target, is_alive):
+        super().__init__(target, is_alive=is_alive)
+        self.is_alive = is_alive
+
+    def execute(self):
+        self.target.set_alive(self.is_alive)
+
+
+class CreateExplosion(Command):
+    def __init__(self, target, index, radius):
+        super().__init__(target, index=index, radius=radius)
+        self.index = index
+        self.radius = radius
+
+    def execute(self):
+        self.target.create_explosion(self.index, self.radius)
+
+
+# keeping this in case current method of sending board updates through create_explosion instead of individual
+# tile updates creates desync between clients
 class UpdateTile(Command):
     def __init__(self, target, index, tile):
         super().__init__(target, index=index, tile=tile)
@@ -75,15 +98,6 @@ class UpdateTile(Command):
 
     def execute(self):
         self.target.set_tile(self.index, self.tile)
-
-
-class SetAlive(Command):
-    def __init__(self, target, is_alive):
-        super().__init__(target, is_alive=is_alive)
-        self.is_alive = is_alive
-
-    def execute(self):
-        self.target.set_alive(self.is_alive)
 
 
 # Automatically create a dictionary containing references to Command objects in this file with keys of their name

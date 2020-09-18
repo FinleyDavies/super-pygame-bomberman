@@ -3,6 +3,7 @@ from game_commands import UpdateTile
 from io import StringIO
 import os
 from random import randint as ran
+from collections import OrderedDict
 
 
 class Board:
@@ -11,7 +12,7 @@ class Board:
     SPAWN_CHAR = 'X'
 
     def __init__(self, board_file, board_name, window_size=None):
-        self.players = []
+        self.players = OrderedDict()
         self.spawn_points = list()
         self.string = ""
         self.board = self._load_file(board_file)
@@ -25,7 +26,6 @@ class Board:
         self.tile_width = self.width // self.cols
         self.tile_height = self.height // self.rows
 
-        self.commands = []
         # print(self.spawn_points)
 
     @classmethod
@@ -81,14 +81,14 @@ class Board:
         tile = self.tile_properties(index)
         if tile["is_solid"]:
             if tile["destructible"]:
-                self.commands.append(UpdateTile(self, index, "flame"))
+                self.set_tile(index, "flame")
             return True
-        self.commands.append(UpdateTile(self, index, "flame"))
+        self.set_tile(index, "flame")
         return False
 
     def update_bomb_positions(self):
         # Bombs are both tiles and objects
-        bomb_positions = [(bomb.x, bomb.y) for player in self.players for bomb in player.bombs]
+        bomb_positions = [(bomb.x, bomb.y) for player in self.players.values() for bomb in player.bombs]
         print(bomb_positions)
 
     def set_tile(self, index, tile):
@@ -124,12 +124,10 @@ class Board:
         return self.cols, self.rows
 
     def add_player(self, player):
-        self.players.append(player)
+        self.players[player.player_name] = player
 
-    def get_updates(self):
-        commands = self.commands[:]
-        self.commands = []
-        return commands
+    def clear_players(self):
+        self.players = OrderedDict()
 
     def get_id(self):
         return self.board_name
@@ -158,9 +156,6 @@ if __name__ == "__main__":
         print()
 
     board.create_explosion((2, 1), 3)
-    for command in board.commands:
-        print(command.index, command.tile)
-        command.execute()
 
     for row in board.board:
         for tile in row:
