@@ -9,7 +9,7 @@ import threading
 import pygame
 from queue import Queue
 from collections import OrderedDict
-from menu import ButtonMenu
+from menu import Menu, ControlsMenu
 
 
 def handle_message(client, message):
@@ -124,7 +124,7 @@ def connect(host=None, port=None, username=None):
     client.send_message([0, username])
 
     print("Loading board")
-    game_board = Board.from_string(client.receive_message()[1], (15 * 16 * 2, 13 * 16 * 2))
+    game_board = Board.from_string(client.receive_message()[1], (15 * 16 * 3, 13 * 16 * 3))
     print(game_board)
     print("Game board has been loaded\n")
 
@@ -136,14 +136,18 @@ def connect(host=None, port=None, username=None):
 
 def main():
     pygame.init()
-    WIDTH, HEIGHT = (15 * 16 * 2, 13 * 16 * 2)
+    WIDTH, HEIGHT = (15 * 16 * 3, 13 * 16 * 3)
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     clock = pygame.time.Clock()
 
-    menu = ButtonMenu(screen)
+    menu = Menu(screen)
+    # controls = Menu(screen, "Controls")
+    controls = ControlsMenu(screen, ["Player1", "Player2", "Player3"])
+    menu.add_menu(controls)
+    menu.add_button("Exit Game", lambda: pygame.event.post(pygame.event.Event(pygame.QUIT, dict())))
+    menus = [menu, controls]
 
     client, username, game_board, players = connect(host="192.168.1.32")
-    player_names = []
     client_player = players[username]
 
     game_queue = Queue()
@@ -182,25 +186,11 @@ def main():
 
 
 
-
-
-        for n, player in enumerate(player_names):
-            p = Player(game_board, player, n)
-            print(player, n)
-            if player == username:
-                print(client_player)
-                client_player = p
-            players[player] = p
-
-        player_names = []
-
-
         for event in pygame.event.get():
-            menu.update(event)
+            [menu.update(event) for menu in menus]
 
             if event.type == pygame.QUIT:
                 running = False
-                # pygame.quit()
 
             if event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
                 keystate = [pygame.key.get_pressed()[key] for key in KEYS]
@@ -220,7 +210,7 @@ def main():
             board_surface = draw_player(board_surface, player)
 
         screen.blit(board_surface, (0, 0))
-        menu.draw()
+        [menu.draw() for menu in menus]
         pygame.display.update()
         screen.fill((16, 120, 48))
         clock.tick(60)

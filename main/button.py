@@ -11,10 +11,15 @@ class Button:
     COLOUR = (230, 230, 230)
     PRESS_TIME = 0.1
 
-    def __init__(self, surface, rect, text="", callback=None, colour=None, font_name=None):
+    def __init__(self, surface, rect, text="", callback=None, self_parameter=False, colour=None, font_name=None, font_size=20, interactive=True, draw_rect=True):
         self.parent_surface = surface
         self.callback = callback
         self.rect = rect
+        self.width = self.rect.width
+        self.self_parameter = self_parameter
+        self.font_size = font_size
+        self.interactive = interactive
+        self.draw_rect = draw_rect
 
         if colour is None:
             colour = self.COLOUR
@@ -32,13 +37,12 @@ class Button:
             font_name = self.FONT
         self.font_name = font_name
 
-        self.font = pygame.font.Font(pygame.font.match_font(self.font_name), 20)
+        self.font = pygame.font.Font(pygame.font.match_font(self.font_name), self.font_size)
         self.text = text
 
-        self.rendered, self.text_rect = self.render_text()
-        self.fit_text()
-
-
+        self.rendered = None
+        self.text_rect = None
+        self.render_text(self.text)
 
         self.is_highlighted = False
         self.is_pressed = False
@@ -46,20 +50,26 @@ class Button:
 
     def draw(self):
         if self.is_pressed:
-            pygame.draw.rect(self.parent_surface, self.pressed_colour, self.rect)
+            if self.draw_rect:
+                pygame.draw.rect(self.parent_surface, self.pressed_colour, self.rect)
             self.parent_surface.blit(self.rendered, self.text_rect.move(0, 5))
 
         elif self.is_highlighted:
-            pygame.draw.rect(self.parent_surface, self.highlight_colour, self.rect)
+            if self.draw_rect:
+                pygame.draw.rect(self.parent_surface, self.highlight_colour, self.rect)
             self.parent_surface.blit(self.rendered, self.text_rect)
 
         else:
-            pygame.draw.rect(self.parent_surface, self.colour, self.rect)
+            if self.draw_rect:
+                pygame.draw.rect(self.parent_surface, self.colour, self.rect)
             self.parent_surface.blit(self.rendered, self.text_rect)
 
-        pygame.draw.rect(self.parent_surface, (10, 10, 10), self.rect, 2)
+        if self.draw_rect:
+            pygame.draw.rect(self.parent_surface, (10, 10, 10), self.rect, 2)
 
     def update(self, mouse_pos):
+        if not self.interactive:
+            return
         if self.rect.collidepoint(mouse_pos):
             self.is_highlighted = True
         else:
@@ -69,29 +79,42 @@ class Button:
             self.is_pressed = False
 
     def press(self, mouse_pos):
+        if not self.interactive:
+            return
         if self.rect.collidepoint(mouse_pos):
+            print(f"pressed {self.text}")
             self.time_pressed = time()
             self.is_pressed = True
             if self.callback:
-                self.callback()
+                if self.self_parameter:
+                    self.callback(self)
+                else:
+                    self.callback()
 
     def change_text(self, text):
-        self.text = text
-        self.render_text()
+        self.render_text(text)
 
-    def render_text(self):
-        rendered = self.font.render(self.text, True, (10, 10, 10))
-        text_rect = rendered.get_rect()
-        text_rect.center = self.rect.center
 
-        return rendered, text_rect
+    def render_text(self, text):
+        self.rendered = self.font.render(text, True, (10, 10, 10))
+        self.text_rect = self.rendered.get_rect()
+        self.text_rect.center = self.rect.center
+
+        self.fit_text()
 
     def fit_text(self):
-        if self.text_rect.width > self.rect.width:
+        if self.text_rect.width + 20 > self.width:
             rect = self.text_rect.copy()
             rect.height = self.rect.height
             rect.center = self.rect.center
             self.rect = rect.inflate(20, 0)
+
+        elif self.text_rect.width < self.width:
+            rect = self.text_rect.copy()
+            rect.height = self.rect.height
+            rect.width = self.width
+            rect.center = self.rect.center
+            self.rect = rect
 
 
 
