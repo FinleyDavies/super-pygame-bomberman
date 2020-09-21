@@ -18,13 +18,16 @@ class Board:
         self.board = self._load_file(board_file)
         self.rows = len(self.board)
         self.cols = len(self.board[0])
+        print("window size is not none",window_size)
         if window_size is None:
-            window_size = self.cols * 48, self.rows * 48
+            window_size = self.cols * 32, self.rows * 32
         self.width, self.height = window_size
         self.board_name = board_name
 
         self.tile_width = self.width // self.cols
         self.tile_height = self.height // self.rows
+        self.tile_width_float = self.width / self.cols
+        self.tile_height_float = self.height / self.rows
 
         # print(self.spawn_points)
 
@@ -120,8 +123,14 @@ class Board:
     def get_tile_size(self):
         return self.tile_width, self.tile_height
 
+    def get_tile_size_float(self):
+        return self.tile_width_float, self.tile_height_float
+
     def get_size(self):
         return self.cols, self.rows
+
+    def get_dimensions(self):
+        return self.width, self.height
 
     def add_player(self, player):
         self.players[player.player_name] = player

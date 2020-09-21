@@ -19,11 +19,12 @@ class Player:
 
         self.board = board
         self.board.add_player(self)
-        self.width, self.height = self.board.get_tile_size()
-        self.x, self.y = 50, 50
+        self.width, self.height = self.board.get_tile_size_float()
+        self.x, self.y = 100, 100
         self.is_alive = True
 
-        self.speed = self.width // 8 // 2
+        self.speed = self.width / 15
+        print(self.speed)
         self.bomb_count = 1
         self.bomb_radius = 2
         self.bombs_active = 0
@@ -34,7 +35,6 @@ class Player:
         self.is_moving = False
         self.time_punched = 0
         self.colour = self.COLOURS[self.player_id % 4]
-        self.last_component = 0
 
     def update_pos(self):
         if self.is_moving and not self.is_punching():
@@ -67,8 +67,8 @@ class Player:
 
             move(vec)
 
-            tile_position = self.board.get_pos_in_tile((self.x, self.y))
-            index = self.board.get_index_from_pos((self.x, self.y))
+            tile_position = self.board.get_pos_in_tile(self.get_pos())
+            index = self.board.get_index_from_pos(self.get_pos())
 
             # TRY 1:
             # if self.MOVEMENT_VECTORS[self.direction][0] != 0:
@@ -220,7 +220,7 @@ class Player:
         return self.is_moving
 
     def get_pos(self):
-        return self.x, self.y
+        return int(self.x), int(self.y)
 
     def get_colour(self):
         return self.colour

@@ -36,7 +36,6 @@ class Dummy(Command):
 class Move(Command):
     def __init__(self, target, direction):
         super().__init__(target, direction=direction)
-        print(self.direction)
         self.direction = direction
 
     def execute(self):

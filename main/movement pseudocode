@@ -1,0 +1,21 @@
+if there is one component to movement:
+    if distance to center > velocity:
+        move forward by velocity
+    if distance to center < velocity:
+        move forward by distance to center
+    if distance to center <= 0:
+        [center, side]
+        if 0,0:
+            move forward by velocity
+        if 0,1:
+            if within corner thresh:
+                move diagonally toward center
+        if 1,1:
+            don't move
+        if 1,0:
+            if in center of tile:
+                face in control direction
+            if facing perpendicular:
+                move to center
+
+

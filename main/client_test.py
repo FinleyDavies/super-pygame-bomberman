@@ -2,7 +2,7 @@ from networking import SocketClient, get_ip
 from game_commands import *
 import time
 from random import randint as ran
-from player import Player, Bomb
+from player_new import Player, Bomb
 from board import Board
 import os
 import threading
@@ -32,6 +32,7 @@ def draw_board(surface, board):
     colour_dic = {"floor": (16, 120, 48), "barrier": (64, 64, 64), "wall": (128, 128, 128), "flame": (207, 53, 46)}
     board_size = board.get_size()
     tile_size = board.get_tile_size()
+    #print(tile_size, board.get_tile_size_float())
 
     for x in range(board_size[0]):
         for y in range(board_size[1]):
@@ -40,10 +41,10 @@ def draw_board(surface, board):
             colour = colour_dic[tile]
             pygame.draw.rect(surface, colour, pygame.Rect(x * w, y * h, w, h))
 
-    for player in board.players.values():
-        x, y = player.get_tile_pos()
-        w, h = board.get_tile_size()
-        pygame.draw.rect(surface, (0, 104, 32), pygame.Rect(x * w, y * h, w, h))
+    # for player in board.players.values():
+    #     x, y = player.get_tile_pos()
+    #     w, h = board.get_tile_size()
+    #     pygame.draw.rect(surface, (0, 104, 32), pygame.Rect(x * w, y * h, w, h))
 
     # for coord in board.flames:
     #     x, y = coord
@@ -130,7 +131,7 @@ def connect(host=None, port=None, username=None):
     client.send_message([0, username])
 
     print("Loading board")
-    game_board = Board.from_string(client.receive_message()[1], (15 * 16 * 3, 13 * 16 * 3))
+    game_board = Board.from_string(client.receive_message()[1])
     print(game_board)
     print("Game board has been loaded\n")
 
@@ -142,7 +143,12 @@ def connect(host=None, port=None, username=None):
 
 def main():
     pygame.init()
-    WIDTH, HEIGHT = (15 * 16 * 3, 13 * 16 * 3)
+
+    client, username, game_board, players = connect()
+    client_player = players[username]
+
+    WIDTH, HEIGHT = game_board.get_dimensions()
+    print(WIDTH, HEIGHT)
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     clock = pygame.time.Clock()
 
@@ -153,10 +159,6 @@ def main():
     menu.add_button("Exit Game", lambda: pygame.event.post(pygame.event.Event(pygame.QUIT, dict())))
     menus = [menu, controls]
 
-    client, username, game_board, players = connect(host="192.168.1.32")
-    client_player = players[username]
-    game_board.create_explosion((2, 1), 3)
-
     game_queue = Queue()
 
     KEYS = [pygame.K_w, pygame.K_a, pygame.K_s, pygame.K_d]
@@ -165,6 +167,7 @@ def main():
     t.setDaemon(True)
     t.start()
 
+    times_test = []
     warmup = True
     running = True
     while running:
@@ -214,7 +217,12 @@ def main():
         board_surface = pygame.Surface((WIDTH, HEIGHT))
         board_surface = draw_board(board_surface, game_board)
         for player in players.values():
+            before = time.time()
             player.update_pos()
+            dt = time.time() - before
+            if dt > 0:
+                times_test.append(dt)
+
             board_surface = draw_player(board_surface, player)
 
         screen.blit(board_surface, (0, 0))
@@ -228,6 +236,7 @@ def main():
     print("CLOSED")
     pygame.quit()
     print("QUIT")
+    print(sum(times_test) / len(times_test))
 
 
 if __name__ == "__main__":
