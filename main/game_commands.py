@@ -36,7 +36,6 @@ class Dummy(Command):
 class Move(Command):
     def __init__(self, target, direction):
         super().__init__(target, direction=direction)
-        self.direction = direction
 
     def execute(self):
         self.target.set_direction(self.direction)
@@ -46,8 +45,6 @@ class Move(Command):
 class SetPosition(Command):
     def __init__(self, target, x_pos, y_pos):
         super().__init__(target, x_pos=x_pos, y_pos=y_pos)
-        self.x_pos = x_pos
-        self.y_pos = y_pos
 
     def execute(self):
         self.target.set_tile_pos((self.x_pos, self.y_pos))
@@ -71,7 +68,6 @@ class Punch(Command):
 class SetAlive(Command):
     def __init__(self, target, is_alive):
         super().__init__(target, is_alive=is_alive)
-        self.is_alive = is_alive
 
     def execute(self):
         self.target.set_alive(self.is_alive)
@@ -80,8 +76,6 @@ class SetAlive(Command):
 class CreateExplosion(Command):
     def __init__(self, target, index, radius):
         super().__init__(target, index=index, radius=radius)
-        self.index = index
-        self.radius = radius
 
     def execute(self):
         self.target.create_explosion(self.index, self.radius)

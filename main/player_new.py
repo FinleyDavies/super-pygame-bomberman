@@ -148,23 +148,23 @@ class Player:
 
             return 1
 
-        def move(vec, center_stop=True, distance=1.0):
+        def move(vec, center_stop=True, distance=1.0, change_direction=True):
             if vec[0] and vec[1]: # if moving diagonally
-                move([vec[0], 0], center_stop, 0.707)
-                move([0, vec[1]], center_stop, 0.707)
+                move([vec[0], 0], center_stop, 0.707, change_direction)
+                move([0, vec[1]], center_stop, 0.707, change_direction)
                 return
 
             dist = self.speed * distance
             if center_stop:
                 center = distance_to_center(vec)
                 if 0 < center < dist:
-                    print("close")
                     dist = abs(center)
 
             self.x += vec[0] * dist
             self.y += vec[1] * dist
 
-            self.movement_direction = self.MOVEMENT_VECTORS.index(vec)
+            if change_direction:
+                self.movement_direction = self.MOVEMENT_VECTORS.index(vec)
 
 
 
@@ -174,11 +174,12 @@ class Player:
             vec = vecs[0]
 
             case = get_case(vec)
-            print(case)
+            # print(case)
             if case == 1:
                 move(vec)
             elif case == 2:
-                move(cut_corner(vec))
+                self.movement_direction = self.MOVEMENT_VECTORS.index(vec)
+                move(cut_corner(vec), change_direction=False)
             elif case == 3:
                 move(self.MOVEMENT_VECTORS[self.movement_direction])
             elif case == 4:
@@ -186,7 +187,7 @@ class Player:
 
         elif len(vecs) == 2:
             cases = {get_case(vecs[0]):vecs[0], get_case(vecs[1]):vecs[1]}
-            print(*cases.keys())
+            # print(*cases.keys())
             combined = [x+y for x,y in zip(*vecs)]
             if cases.keys() == {1, 1}:
                 move(combined)
@@ -258,6 +259,8 @@ class Player:
         return self.colour
 
     def get_tile_pos(self):
+        x, y = self.board.get_index_from_pos((self.x, self.y))
+        print(x, y)
         return self.board.get_index_from_pos((self.x, self.y))
 
     def get_id(self):

@@ -4,23 +4,24 @@ from io import StringIO
 import os
 from random import randint as ran
 from collections import OrderedDict
+from tile import Tile
+from time import time
 
 
 class Board:
-    tiles = json.load(open("tiles.json", "r"))
-    supported_symbols = [value["symbol"] for value in tiles.values()]
     SPAWN_CHAR = 'X'
 
     def __init__(self, board_file, board_name, window_size=None):
         self.players = OrderedDict()
         self.spawn_points = list()
         self.string = ""
-        self.board = self._load_file(board_file)
+        self._load_file(board_file)
+
         self.rows = len(self.board)
         self.cols = len(self.board[0])
-        print("window size is not none",window_size)
         if window_size is None:
             window_size = self.cols * 32, self.rows * 32
+
         self.width, self.height = window_size
         self.board_name = board_name
 
@@ -45,29 +46,26 @@ class Board:
 
     def _load_file(self, board_file):
         self.string = board_file.read()
+        self.board = [[Tile() for _ in range(len(line))] for line in self.string.split()]
+
         board_file = StringIO(self.string)
-        board = []
         for y, line in enumerate(board_file):
-            row = []
             for x, char in enumerate(line.strip()):
-                if char in self.supported_symbols:
-                    for name, attributes in self.tiles.items():
+                if char in Tile.supported_symbols:
+                    for name, attributes in Tile.tile_properties.items():
                         if attributes["symbol"] == char:
-                            row.append(name)
+                            self.set_tile((x, y), name)
                             break
-                else:
-                    if char == self.SPAWN_CHAR:
-                        self.spawn_points.append((x, y))
-                    row.append(Board.tiles["floor"]["name"])
 
-            board.append(row)
-
-        return board
+                elif char == self.SPAWN_CHAR:
+                    self.spawn_points.append((x, y))
+                    self.set_tile((x, y), "floor")
 
     def create_explosion(self, index, radius):
+        print("explosion")
         radius += 1
 
-        if self.explode_tile(index):
+        if self.board[index[1]][index[0]].explode():
             return 0
 
         for direction in [(0, 1), (-1, 0), (0, -1), (1, 0)]:
@@ -77,28 +75,21 @@ class Board:
                 offset_y *= i
                 new_index = index[0] + offset_x, index[1] + offset_y
 
-                if self.explode_tile(new_index):
+                if self.board[new_index[1]][new_index[0]].explode():
                     break
 
-    def explode_tile(self, index):
-        tile = self.tile_properties(index)
-        if tile["is_solid"]:
-            if tile["destructible"]:
-                self.set_tile(index, "flame")
-            return True
-        self.set_tile(index, "flame")
-        return False
+    def update(self):
+        for row in self.board:
+            for tile in row:
+                tile.update()
 
     def update_bomb_positions(self):
         # Bombs are both tiles and objects
         bomb_positions = [(bomb.x, bomb.y) for player in self.players.values() for bomb in player.bombs]
         print(bomb_positions)
 
-    def set_tile(self, index, tile):
-        self.board[index[1]][index[0]] = tile
-
-    def set_tile_by_name(self, index, tile_name):
-        self.board[index[1]][index[0]] = self.tiles[tile_name]["name"]
+    def set_tile(self, index, tile_name):
+        self.board[index[1]][index[0]].set_tile(tile_name)
 
     def tile_is_occupied(self, index):
         pass
@@ -107,7 +98,7 @@ class Board:
         return len(self.spawn_points)
 
     def get_index_from_pos(self, pos):
-        return pos[0] // self.tile_width, pos[1] // self.tile_height
+        return int(pos[0] // self.tile_width), int(pos[1] // self.tile_height)
 
     def get_pos_from_index(self, index):
         return (index[0] + 0.5) * self.tile_width, (index[1] + 0.5) * self.tile_height
@@ -117,8 +108,8 @@ class Board:
 
     def tile_properties(self, index):
         if 0 < index[0] < self.cols and 0 < index[1] < self.rows:
-            return self.tiles[self.board[index[1]][index[0]]]
-        return self.tiles["barrier"]
+            return self.board[index[1]][index[0]]
+        return Tile.new_tile("barrier")
 
     def get_tile_size(self):
         return self.tile_width, self.tile_height
@@ -161,12 +152,12 @@ if __name__ == "__main__":
 
     for row in board.board:
         for tile in row:
-            print(board.tiles[tile]["symbol"], end="")
+            print(tile["symbol"], end="")
         print()
 
-    board.create_explosion((2, 1), 3)
+    board.create_explosion((1, 1), 3)
 
     for row in board.board:
         for tile in row:
-            print(board.tiles[tile]["symbol"], end="")
+            print(tile["symbol"], end="")
         print()

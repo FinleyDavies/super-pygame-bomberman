@@ -1,56 +1,56 @@
 {
   "floor": {
-    "id": 0,
     "name": "floor",
     "symbol": ".",
     "is_solid": false,
-    "destructible": false,
+    "destructible": true,
     "blocks_movement": false,
-    "duration": 0
+    "duration": 0,
+    "on_explode": "flame"
   },
   "wall": {
-    "id": 1,
     "name": "wall",
     "symbol": "=",
     "is_solid": true,
     "destructible": true,
     "blocks_movement": true,
-    "duration": 0
+    "duration": 0,
+    "on_explode": "wall_destroyed"
   },
   "wall_destroyed": {
-    "id": 101,
     "name": "wall_destroyed",
     "symbol": "/",
     "is_solid": true,
     "destructible": false,
     "blocks_movement": true,
-    "duration": 500
+    "duration": 500,
+    "on_explode": "floor"
   },
   "barrier": {
-    "id": 2,
     "name": "barrier",
     "symbol": "#",
     "is_solid": true,
     "destructible": false,
     "blocks_movement": true,
-    "duration": 0
+    "duration": 0,
+    "on_explode": "barrier"
   },
   "bomb": {
-    "id": 3,
     "name": "bomb",
     "symbol": "O",
     "is_solid": true,
     "destructible": true,
     "blocks_movement": true,
-    "duration": 0
+    "duration": 0,
+    "on_explode": "floor"
   },
   "flame": {
-    "id": 4,
     "name": "flame",
     "symbol": "^",
-    "is_solid": true,
-    "destructible": false,
+    "is_solid": false,
+    "destructible": true,
     "blocks_movement": false,
-    "duration": 1000
+    "duration": 1000,
+    "on_explode": "flame"
   }
 }

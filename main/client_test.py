@@ -29,7 +29,8 @@ def handle_message(client, message):
 def draw_board(surface, board):
     # draws board to game surface before drawing to screen - so the game can be offset to allow space for HUD
 
-    colour_dic = {"floor": (16, 120, 48), "barrier": (64, 64, 64), "wall": (128, 128, 128), "flame": (207, 53, 46)}
+    colour_dic = {"floor": (16, 120, 48), "barrier": (64, 64, 64), "wall": (128, 128, 128), "flame": (207, 53, 46),
+                  "wall_destroyed": (100, 100, 100)}
     board_size = board.get_size()
     tile_size = board.get_tile_size()
     #print(tile_size, board.get_tile_size_float())
@@ -180,7 +181,9 @@ def main():
                 client_player = players[username]
 
             elif message[0] == 1:   # game command
-                game_queue.put(deserialize(message[1], players))
+                objects = players.copy()
+                objects[game_board.get_id()] = game_board
+                game_queue.put(deserialize(message[1], objects))
 
             elif message[0] == 2:   # chat message
                 print(message[1])
@@ -209,20 +212,23 @@ def main():
                 game_queue.put(command)
                 client.send_message([1, command.serialize()])
 
+                if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+                    command = CreateExplosion(game_board, client_player.get_tile_pos(), 4)
+                    game_queue.put(CreateExplosion(game_board, client_player.get_tile_pos(), 4))
+                    client.send_message([1, command.serialize()])
+
 
         while not game_queue.empty():
             command = game_queue.get()
             command.execute()
 
         board_surface = pygame.Surface((WIDTH, HEIGHT))
+        game_board.update()
         board_surface = draw_board(board_surface, game_board)
-        for player in players.values():
-            before = time.time()
-            player.update_pos()
-            dt = time.time() - before
-            if dt > 0:
-                times_test.append(dt)
 
+
+        for player in players.values():
+            player.update_pos()
             board_surface = draw_player(board_surface, player)
 
         screen.blit(board_surface, (0, 0))
@@ -236,7 +242,6 @@ def main():
     print("CLOSED")
     pygame.quit()
     print("QUIT")
-    print(sum(times_test) / len(times_test))
 
 
 if __name__ == "__main__":
