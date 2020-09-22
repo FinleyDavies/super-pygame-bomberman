@@ -1,31 +1,69 @@
+from datetime import datetime
 import json
-from json import JSONEncoder
 
-class Student:
-    def __init__(self, rollNumber, name):
-        self.rollNumber, self.name = rollNumber, name
+simple = dict(int_list=[1, 2, 3],
 
-    def print_roll(self):
-        print(self.rollNumber)
+              text='string',
 
-class StudentEncoder(JSONEncoder):
-        def default(self, o):
-            return o.__dict__
+              number=3.44,
 
-def customStudentDecoder(studentDict):
-    return Student(**studentDict)
+              boolean=True,
 
-student = Student(1, "Emma")
+              none=None)
 
-# dumps() produces JSON in native str format. if you want to writ it in file use dump()
-studentJson = json.dumps(student, indent=4, cls=StudentEncoder)
-print("Student JSON")
-print(studentJson)
 
-# Parse JSON into an object with attributes corresponding to dict keys.
-studObj = json.loads(studentJson, object_hook=customStudentDecoder)
+class A(object):
 
-print("After Converting JSON Data into Custom Python Object")
-print(studObj.rollNumber, studObj.name)
+    def __init__(self, simple):
 
-studObj.print_roll()
+        self.simple = simple
+
+    def __eq__(self, other):
+
+        if not hasattr(other, 'simple'):
+            return False
+
+        return self.simple == other.simple
+
+    def __ne__(self, other):
+
+        if not hasattr(other, 'simple'):
+            return True
+
+        return self.simple != other.simple
+
+
+complex = dict(a=A(simple), when=datetime(2016, 3, 7))
+
+
+class CustomEncoder(json.JSONEncoder):
+
+    def default(self, o):
+        if isinstance(o, datetime):
+            return {'__datetime__': o.replace().isoformat()}
+
+        return {f'__{o.__class__.__name__}__': o.__dict__}
+
+
+def decode_object(o):
+    if '__A__' in o:
+
+        a = A()
+
+        a.__dict__.update(o['__A__'])
+
+        return a
+
+    elif '__datetime__' in o:
+
+        return datetime.strptime(o['__datetime__'], '%Y-%m-%dT%H:%M:%S')
+
+    return o
+
+
+serialized = json.dumps(complex, indent=4, cls=CustomEncoder)
+deserialized = json.loads(serialized, object_hook=decode_object)
+
+
+print(serialized)
+print(deserialized)

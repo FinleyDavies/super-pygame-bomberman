@@ -1,8 +1,5 @@
-import json
-from game_commands import UpdateTile
 from io import StringIO
 import os
-from random import randint as ran
 from collections import OrderedDict
 from tile import Tile
 from time import time
@@ -83,16 +80,8 @@ class Board:
             for tile in row:
                 tile.update()
 
-    def update_bomb_positions(self):
-        # Bombs are both tiles and objects
-        bomb_positions = [(bomb.x, bomb.y) for player in self.players.values() for bomb in player.bombs]
-        print(bomb_positions)
-
     def set_tile(self, index, tile_name):
         self.board[index[1]][index[0]].set_tile(tile_name)
-
-    def tile_is_occupied(self, index):
-        pass
 
     def get_max_players(self):
         return len(self.spawn_points)

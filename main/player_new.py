@@ -27,8 +27,8 @@ class Player:
         self.is_alive = True
 
         self.speed = self.width / 15
-        self.bomb_count = 1
-        self.bomb_radius = 2
+        self.bomb_count = 3
+        self.bomb_radius = 4
         self.bombs_active = 0
         self.bombs = []
         self.powerups = [False, False, False, False]
@@ -37,6 +37,11 @@ class Player:
         self.is_moving = False
         self.time_punched = 0
         self.colour = self.COLOURS[self.player_id % 4]
+
+    def update(self):
+        self.update_pos()
+        for bomb in self.bombs:
+            bomb.update()
 
     def update_pos(self):
         if not self.is_moving:
@@ -204,14 +209,6 @@ class Player:
                 move(cut_corner(cases[2]))
 
 
-
-
-
-
-
-    def change_direction(self):
-        pass
-
     def place_bomb(self):
         if self.bombs_active < self.bomb_count:
             self.bombs.append(Bomb(self))
@@ -223,7 +220,11 @@ class Player:
     def set_pos(self, pos):
         self.x, self.y = pos
 
-    def get_pos(self):
+    def get_pos(self, snap=False):
+        if snap:
+            index = self.get_tile_pos()
+            x, y = self.board.get_pos_from_index(index)
+            return int(x), int(y)
         return int(self.x), int(self.y)
 
     def set_tile_pos(self, index):
@@ -235,7 +236,7 @@ class Player:
 
     def remove_bomb(self, bomb):
         self.bombs.remove(bomb)
-        self.bomb_count -= 1
+        self.bombs_active -= 1
 
     def has_remote_detonation(self):
         return self.powerups[2]
@@ -259,8 +260,6 @@ class Player:
         return self.colour
 
     def get_tile_pos(self):
-        x, y = self.board.get_index_from_pos((self.x, self.y))
-        print(x, y)
         return self.board.get_index_from_pos((self.x, self.y))
 
     def get_id(self):
@@ -272,15 +271,18 @@ class Player:
     def set_alive(self, is_alive):
         self.is_alive = is_alive
 
+    def get_bombs(self):
+        return self.bombs
+
 
 class Bomb:
-    dud_chance = 0.05
+    dud_chance = 0.001
     chain_time = 0.2  # delay between explosions in chain reactions
 
     def __init__(self, owner):
         self.time_created = time.time()
         self.owner = owner
-        self.x, self.y = self.owner.get_pos()
+        self.x, self.y = self.owner.get_pos(True)
         self.fuse_time = 2.5
         self.radius = self.owner.get_bomb_radius()
         self.inactive = False
@@ -293,7 +295,7 @@ class Bomb:
             self.inactive = True
             self.dud_time = randint(5, 15)
 
-    def tick(self):
+    def update(self):
         if self.fuse_time <= 0:
             return
 
@@ -306,9 +308,6 @@ class Bomb:
         if not self.inactive and delta > self.fuse_time:
             self.explode()
 
-    def inside_flame(self):
-        self.in_flame = True
-        self.flame_time = time.time()
 
     def explode(self):
         self.destroy()
@@ -317,3 +316,6 @@ class Bomb:
 
     def destroy(self):
         self.owner.remove_bomb(self)
+
+    def get_pos(self):
+        return int(self.x), int(self.y)

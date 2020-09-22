@@ -65,6 +65,14 @@ def draw_player(surface, player):
     line_end = pos[0] + player.MOVEMENT_VECTORS[player.movement_direction][0] * player.width // 2, \
                pos[1] + player.MOVEMENT_VECTORS[player.movement_direction][1] * player.height // 2
     pygame.draw.line(surface, (32, 32, 32), pos, line_end, 2)
+
+    for bomb in player.get_bombs():
+        x, y = bomb.get_pos()
+        w, h = player.get_size()
+        w, h = w - 20, h - 20
+        rect = pygame.Rect(x, y, w, h).move(-w // 2, -h // 2)
+        pygame.draw.rect(surface, (50, 50, 50), rect)
+
     return surface
 
 
@@ -213,8 +221,9 @@ def main():
                 client.send_message([1, command.serialize()])
 
                 if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                    command = CreateExplosion(game_board, client_player.get_tile_pos(), 4)
-                    game_queue.put(CreateExplosion(game_board, client_player.get_tile_pos(), 4))
+                    # command = CreateExplosion(game_board, client_player.get_tile_pos(), 4)
+                    command = PlaceBomb(client_player)
+                    game_queue.put(command)
                     client.send_message([1, command.serialize()])
 
 
@@ -228,7 +237,7 @@ def main():
 
 
         for player in players.values():
-            player.update_pos()
+            player.update()
             board_surface = draw_player(board_surface, player)
 
         screen.blit(board_surface, (0, 0))
