@@ -153,7 +153,16 @@ def connect(host=None, port=None, username=None):
 def main():
     pygame.init()
 
-    client, username, game_board, players = connect()
+    while True:
+        host = input("Enter host IP (leave blank for localhost): ")
+        if host == "":
+            host = None
+        try:
+            client, username, game_board, players = connect(host=host)
+            break
+        except:
+            print("invalid IP address")
+
     client_player = players[username]
 
     WIDTH, HEIGHT = game_board.get_dimensions()

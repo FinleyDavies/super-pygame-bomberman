@@ -95,10 +95,11 @@ class UpdateTile(Command):
 
 # Automatically create a dictionary containing references to Command objects in this file with keys of their name
 commands_dict = {}
-for name, cls in getmembers(modules[__name__], isclass):
+for name, cls in getmembers(modules[__name__], lambda x: isclass(x)): # and isinstance(x, Command)):
     if getmodule(cls) == modules[__name__]:
         commands_dict[name] = cls
 
+print(commands_dict)
 
 def deserialize(serialized, game_objects):
     """
