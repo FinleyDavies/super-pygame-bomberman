@@ -276,7 +276,7 @@ class Player:
 
 
 class Bomb:
-    dud_chance = 0.05
+    dud_chance = 0
     chain_time = 0.2  # delay between explosions in chain reactions
 
     def __init__(self, owner):
