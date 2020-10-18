@@ -43,13 +43,13 @@ def on_disconnect(server, username):
     server.send_to_all([2, f"{username} has disconnected"], [username])
 
 def main():
-    server = SocketServer(on_disconnect)
+    server = SocketServer(on_disconnect, port=4832)
     print(server.host)
     print(server.port)
 
     server.start_listening()
 
-    round = GameRound("Arena1.txt")
+    round = GameRound("33x19walls.txt")
 
     while True:
         for message, user in server.collect_messages():

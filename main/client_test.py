@@ -10,6 +10,7 @@ import pygame
 from queue import Queue
 from collections import OrderedDict
 from menu import Menu, ControlsMenu
+from drawing import draw_player, draw_board, convert_sheets
 
 
 def handle_message(client, message):
@@ -26,54 +27,11 @@ def handle_message(client, message):
         print(message[1])
 
 
-def draw_board(surface, board):
-    # draws board to game surface before drawing to screen - so the game can be offset to allow space for HUD
-
-    colour_dic = {"floor": (16, 120, 48), "barrier": (64, 64, 64), "wall": (128, 128, 128), "flame": (207, 53, 46),
-                  "wall_destroyed": (100, 100, 100)}
-    board_size = board.get_size()
-    tile_size = board.get_tile_size()
-    #print(tile_size, board.get_tile_size_float())
-
-    for x in range(board_size[0]):
-        for y in range(board_size[1]):
-            tile = board.tile_properties((x, y))["name"]
-            w, h = board.get_tile_size()
-            colour = colour_dic[tile]
-            pygame.draw.rect(surface, colour, pygame.Rect(x * w, y * h, w, h))
-
-    # for player in board.players.values():
-    #     x, y = player.get_tile_pos()
-    #     w, h = board.get_tile_size()
-    #     pygame.draw.rect(surface, (0, 104, 32), pygame.Rect(x * w, y * h, w, h))
-
-    # for coord in board.flames:
-    #     x, y = coord
-    #     w, h = board.get_tile_size()
-    #     pygame.draw.rect(surface, (207, 53, 46), pygame.Rect(x * w, y * h, w, h))
 
 
-    return surface
 
-def draw_player(surface, player):
-    x, y = player.get_pos()
-    w, h = player.get_size()
-    rect = pygame.Rect(x, y, w, h).move(-w // 2, -h // 2)
 
-    pygame.draw.rect(surface, player.get_colour(), rect)
-    pos = player.get_pos()
-    line_end = pos[0] + player.MOVEMENT_VECTORS[player.movement_direction][0] * player.width // 2, \
-               pos[1] + player.MOVEMENT_VECTORS[player.movement_direction][1] * player.height // 2
-    pygame.draw.line(surface, (32, 32, 32), pos, line_end, 2)
 
-    for bomb in player.get_bombs():
-        x, y = bomb.get_pos()
-        w, h = player.get_size()
-        w, h = w - 20, h - 20
-        rect = pygame.Rect(x, y, w, h).move(-w // 2, -h // 2)
-        pygame.draw.rect(surface, (50, 50, 50), rect)
-
-    return surface
 
 
 def input_callback(client, input):
@@ -153,15 +111,12 @@ def connect(host=None, port=None, username=None):
 def main():
     pygame.init()
 
-    while True:
-        host = input("Enter host IP (leave blank for localhost): ")
-        if host == "":
-            host = None
-        try:
-            client, username, game_board, players = connect(host=host)
-            break
-        except:
-            print("invalid IP address")
+
+    host = input("Enter host IP (leave blank for localhost): ")
+    if host == "":
+        host = None
+    client, username, game_board, players = connect(host=host, port=4832)
+
 
     client_player = players[username]
 
@@ -169,6 +124,13 @@ def main():
     print(WIDTH, HEIGHT)
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
     clock = pygame.time.Clock()
+
+    font = pygame.font.SysFont("Arial", 50)
+
+    def update_fps():
+        fps = str(int(clock.get_fps()))
+        fps_text = font.render(fps, 1, pygame.Color("green"))
+        return fps_text
 
     menu = Menu(screen)
     # controls = Menu(screen, "Controls")
@@ -184,6 +146,7 @@ def main():
     t = threading.Thread(target=input_thread, args=(client, input_callback, username), name="client chat input")
     t.setDaemon(True)
     t.start()
+    convert_sheets()
 
     times_test = []
     warmup = True
@@ -240,16 +203,19 @@ def main():
             command = game_queue.get()
             command.execute()
 
-        board_surface = pygame.Surface((WIDTH, HEIGHT))
+
         game_board.update()
-        board_surface = draw_board(board_surface, game_board)
+        board_surface = draw_board(game_board)
 
 
         for player in players.values():
             player.update()
             board_surface = draw_player(board_surface, player)
 
+        board_surface = pygame.transform.scale(board_surface, (WIDTH, HEIGHT))
+
         screen.blit(board_surface, (0, 0))
+        screen.blit(update_fps(), (10, 0))
         [menu.draw() for menu in menus]
         pygame.display.update()
         screen.fill((16, 120, 48))

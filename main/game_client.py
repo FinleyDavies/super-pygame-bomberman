@@ -24,8 +24,8 @@ def load_sprites(folder):
     powerups_path = os.path.abspath(os.path.join("..", "Sprites", folder, "powerups.png"))
 
     players = SpriteSheet(players_path, (16, 24))
-    tiles = SpriteSheet(tiles_path, (16, 24))
-    powerups = SpriteSheet(powerups_path, (16, 24))
+    tiles = SpriteSheet(tiles_path, (16, 16))
+    powerups = SpriteSheet(powerups_path, (16, 16))
 
     return players, tiles, powerups
 

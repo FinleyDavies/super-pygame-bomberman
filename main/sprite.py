@@ -4,15 +4,15 @@ import sys
 import os
 
 SPRITES = "Super_Bomberman_SNES"
-SCALE_FACTOR = 3
+SCALE_FACTOR = 1
 COLOUR_KEY = (16, 120, 48)
 
 # player spritesheet dimensions:
 # 16x24 pixel sprites
 # 21 columns by 4 rows
-players_path = os.path.join("Sprites", SPRITES, "players")
-powerups_path = os.path.join("Sprites", SPRITES, "powerups")
-tiles_path = os.path.join("Sprites", SPRITES, "tiles")
+PLAYER_PATH = os.path.join("..", "Sprites", SPRITES, "players.png")
+POWERUP_PATH = os.path.join("..", "Sprites", SPRITES, "powerups.png")
+TILE_PATH = os.path.join("..", "Sprites", SPRITES, "tiles.png")
 
 
 class SpriteSheet:
@@ -57,7 +57,7 @@ class SpriteSheet:
 		"""
 		for i, row in enumerate(self.sprites):
 			for j, sprite in enumerate(row):
-				self.sprites[i][j] = sprite.convert()
+				self.sprites[i][j] = sprite.convert_alpha()
 
 
 class Animation:
@@ -79,16 +79,25 @@ class Animation:
 		self.loop = loop
 		self.timer = 0
 
-	def start_animation(self):
+	def start_animation(self, timer=None):
 		"""
 		:return: None
 		Allows animation to consistently start on the same frame each time.
 		"""
-		self.timer = time.time()
+		if timer is None:
+			timer = time.time()
+		self.timer = timer
 
-	def get_current_frame(self):
-		delta = time.time() - self.timer
+	def get_current_frame(self, start=None):
+		if self.duration == 0:
+			return self.get_frame(0)
+
+		if start is None:
+			start = self.timer
+
+		delta = time.time() - start
 		delta *= 1000
+		delta = int(delta)
 
 		if self.loop:
 			delta %= self.duration
@@ -107,8 +116,11 @@ class Animation:
 		return self.get_frame(current_frame)
 
 	def get_frame(self, index):
+		# the animation sheet is not contained in this class so changes to the sprite sheet will apply to all
+		# animations using it
 		return self.sprite_sheet.get_sprites()[self.indices[index][1]][self.indices[index][0]]
 
 	def get_times_looped(self):
 		return (time.time() - self.timer) // self.duration
+
 

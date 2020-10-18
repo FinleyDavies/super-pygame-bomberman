@@ -23,7 +23,7 @@ class Player:
         self.board.add_player(self)
         self.width, self.height = self.board.get_tile_size_float()
         print(self.width, self.height)
-        self.x, self.y = 100, 100
+        self.x, self.y = 3.5 * self.width, 3.5 * self.height
         self.is_alive = True
 
         self.speed = self.width / 15
@@ -276,7 +276,7 @@ class Player:
 
 
 class Bomb:
-    dud_chance = 0.001
+    dud_chance = 0.05
     chain_time = 0.2  # delay between explosions in chain reactions
 
     def __init__(self, owner):
