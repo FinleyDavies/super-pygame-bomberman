@@ -122,7 +122,13 @@ class Board:
         return self.board_name
 
     def __str__(self):
-        return self.string
+        string = ""
+        for row in self.board:
+            for tile in row:
+                string += Tile.tile_properties[tile["name"]]["symbol"]
+            string += "\n"
+
+        return string
 
 
 if __name__ == "__main__":

@@ -47,6 +47,13 @@ class SetPosition(Command):
         super().__init__(target, x_pos=x_pos, y_pos=y_pos)
 
     def execute(self):
+        self.target.set_pos((self.x_pos, self.y_pos))
+
+class SetTilePosition(Command):
+    def __init__(self, target, x_pos, y_pos):
+        super().__init__(target, x_pos=x_pos, y_pos=y_pos)
+
+    def execute(self):
         self.target.set_tile_pos((self.x_pos, self.y_pos))
 
 

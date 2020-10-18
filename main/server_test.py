@@ -9,7 +9,7 @@ def handle_message(server, message, username, round):
         print("client connected")
 
         # send board to the new client
-        server.send_message([3, str(round.get_board())], [username])
+        server.send_to_all([3, str(round.get_board())])
 
         # send all player names and ids to the new client
         server.send_to_all([0, ",".join(list(server.get_clients()))])

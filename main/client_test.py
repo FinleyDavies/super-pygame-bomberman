@@ -24,7 +24,7 @@ def handle_message(client, message):
         print(message[1])
 
     elif message[0] == 3:
-        print(message[1])
+        return Board.from_string(client.receive_message()[1])
 
 
 
@@ -115,6 +115,8 @@ def main():
     host = input("Enter host IP (leave blank for localhost): ")
     if host == "":
         host = None
+
+    #host = "3.17.188.254"
     client, username, game_board, players = connect(host=host, port=4832)
 
 
@@ -189,6 +191,10 @@ def main():
             if event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
                 keystate = [pygame.key.get_pressed()[key] for key in KEYS]
                 command = get_command_from_keystate(keystate, client_player)
+                game_queue.put(command)
+                client.send_message([1, command.serialize()])
+
+                command = SetPosition(client_player, client_player.x, client_player.y)
                 game_queue.put(command)
                 client.send_message([1, command.serialize()])
 
