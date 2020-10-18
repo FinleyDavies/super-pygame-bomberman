@@ -50,7 +50,7 @@
     "is_solid": false,
     "destructible": true,
     "blocks_movement": false,
-    "duration": 1000,
+    "duration": 720,
     "on_explode": "flame"
   }
 }

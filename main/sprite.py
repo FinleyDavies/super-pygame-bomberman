@@ -109,7 +109,7 @@ class Animation:
 		delay_sum = 0
 		while True:
 			delay_sum += self.delays[current_frame]
-			if delay_sum > delta:
+			if delay_sum >= delta:
 				break
 			current_frame += 1
 

@@ -54,14 +54,16 @@ def create_animations(players, tiles, powerups):
     barrier             = Animation(tiles, [[1, 0]], 0)
     wall                = Animation(tiles, [[2, 0]], 0)
     wall_destroyed      = Animation(tiles, [[i, 3] for i in range(6)], 500)
-    powerup_destroyed   = Animation(tiles, [[i, 4] for i in range(6)], 500)
+    powerup_destroyed   = Animation(tiles, [[i, 4] for i in range(7)], 500)
     bomb                = Animation(tiles, [[0, 1], [1, 1], [2, 1], [1, 1]], 1200)
+    flame               = Animation(tiles, [[i, 10] for i in range(5)], 720)
 
     tile_animations["barrier"] = barrier
     tile_animations["wall"] = wall
     tile_animations["wall_destroyed"] = wall_destroyed
     tile_animations["powerup_destroyed"] = powerup_destroyed
     tile_animations["bomb"] = bomb
+    tile_animations["flame"] = flame
 
     # CREATE POWERUP ANIMATIONS ###########################################################################
     powerup_animations = dict()
