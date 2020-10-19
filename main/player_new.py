@@ -1,5 +1,5 @@
 import time
-from random import random, randint
+from random import random, randint, choice
 from threading import Thread
 from time import sleep
 
@@ -22,7 +22,7 @@ class Player:
         self.board = board
         self.board.add_player(self)
         self.width, self.height = self.board.get_tile_size_float()
-        self.x, self.y = 3.5 * self.width, 3.5 * self.height
+        self.x, self.y = self.board.random_spawn()
         self.is_alive = True
 
         self.speed = self.width / 15
@@ -41,6 +41,9 @@ class Player:
         self.update_pos()
         for bomb in self.bombs:
             bomb.update()
+
+        if self.board.tile_properties(self.get_tile_pos())["name"] == "flame":
+            self.x, self.y = self.board.random_spawn()
 
     def update_pos(self):
         if not self.is_moving:

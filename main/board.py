@@ -2,6 +2,7 @@ from io import StringIO
 import os
 from collections import OrderedDict
 from tile import Tile
+from random import choice
 from time import time
 
 
@@ -58,6 +59,7 @@ class Board:
                     self.spawn_points.append((x, y))
                     self.set_tile((x, y), "floor")
 
+
     def create_explosion(self, index, radius):
         print("explosion")
         radius += 1
@@ -81,6 +83,11 @@ class Board:
         for row in self.board:
             for tile in row:
                 tile.update()
+
+
+    def random_spawn(self):
+        index = choice(self.spawn_points)
+        return self.get_pos_from_index(index)
 
     def set_tile(self, index, tile_name):
         self.board[index[1]][index[0]].set_tile(tile_name)
@@ -125,10 +132,17 @@ class Board:
 
     def __str__(self):
         string = ""
-        for row in self.board:
-            for tile in row:
-                string += Tile.tile_properties[tile["name"]]["symbol"]
+        for i, row in enumerate(self.board):
+            for j, tile in enumerate(row):
+                if (j, i) in self.spawn_points:
+                    string += "X"
+                else:
+                    string += Tile.tile_properties[tile["name"]]["symbol"]
             string += "\n"
+
+        # for index in self.spawn_points:
+        #     print(string)
+        #     string[index[1]*self.width + index[0]] = "X"
 
         return string
 
