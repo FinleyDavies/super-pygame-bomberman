@@ -1,5 +1,6 @@
 import time
 from random import random, randint
+from player_new import Bomb
 
 
 class Player:
@@ -172,6 +173,11 @@ class Player:
                                 move([0, -vec[1]])
                             break
 
+    def update(self):
+        self.update_pos()
+        for bomb in self.bombs:
+            bomb.update()
+
     def change_direction(self):
         # todo approach to both fix getting stuck and emulate original Super Bomberman movement
         #  use more checks eg surrounding tiles, and whether change is perp or parallel to previous direction
@@ -199,7 +205,7 @@ class Player:
 
     def remove_bomb(self, bomb):
         self.bombs.remove(bomb)
-        self.bomb_count -= 1
+        self.bombs_active -= 1
 
     def has_remote_detonation(self):
         return self.powerups[2]
@@ -219,7 +225,11 @@ class Player:
     def get_is_moving(self):
         return self.is_moving
 
-    def get_pos(self):
+    def get_pos(self, snap=False):
+        if snap:
+            index = self.get_tile_pos()
+            x, y = self.board.get_pos_from_index(index)
+            return int(x), int(y)
         return int(self.x), int(self.y)
 
     def get_colour(self):
@@ -237,48 +247,51 @@ class Player:
     def set_alive(self, is_alive):
         self.is_alive = is_alive
 
+    def get_bombs(self):
+        return self.bombs
 
-class Bomb:
-    dud_chance = 0.05
-    chain_time = 0.2  # delay between explosions in chain reactions
 
-    def __init__(self, owner):
-        self.time_created = time.time()
-        self.owner = owner
-        self.x, self.y = self.owner.get_pos()
-        self.fuse_time = 2.5
-        self.radius = self.owner.get_bomb_radius()
-        self.inactive = False
-        self.dud_time = 0
-
-        self.in_flame = False
-        self.flame_time = 0
-
-        if random() < self.dud_chance:
-            self.inactive = True
-            self.dud_time = randint(5, 15)
-
-    def tick(self):
-        if self.fuse_time <= 0:
-            return
-
-        delta = time.time() - self.time_created
-
-        if self.inactive and delta > self.dud_time:
-            self.inactive = False
-            self.time_created = time.time()
-
-        if not self.inactive and delta > self.fuse_time:
-            self.explode()
-
-    def inside_flame(self):
-        self.in_flame = True
-        self.flame_time = time.time()
-
-    def explode(self):
-        self.destroy()
-        tile_x, tile_y = self.owner.board.get_index_from_pos((self.x, self.y))
-        self.owner.board.create_explosion((tile_x, tile_y), self.radius)
-
-    def destroy(self):
-        self.owner.remove_bomb(self)
+# class Bomb:
+#     dud_chance = 0.05
+#     chain_time = 0.2  # delay between explosions in chain reactions
+#
+#     def __init__(self, owner):
+#         self.time_created = time.time()
+#         self.owner = owner
+#         self.x, self.y = self.owner.get_pos()
+#         self.fuse_time = 2.5
+#         self.radius = self.owner.get_bomb_radius()
+#         self.inactive = False
+#         self.dud_time = 0
+#
+#         self.in_flame = False
+#         self.flame_time = 0
+#
+#         if random() < self.dud_chance:
+#             self.inactive = True
+#             self.dud_time = randint(5, 15)
+#
+#     def tick(self):
+#         if self.fuse_time <= 0:
+#             return
+#
+#         delta = time.time() - self.time_created
+#
+#         if self.inactive and delta > self.dud_time:
+#             self.inactive = False
+#             self.time_created = time.time()
+#
+#         if not self.inactive and delta > self.fuse_time:
+#             self.explode()
+#
+#     def inside_flame(self):
+#         self.in_flame = True
+#         self.flame_time = time.time()
+#
+#     def explode(self):
+#         self.destroy()
+#         tile_x, tile_y = self.owner.board.get_index_from_pos((self.x, self.y))
+#         self.owner.board.create_explosion((tile_x, tile_y), self.radius)
+#
+#     def destroy(self):
+#         self.owner.remove_bomb(self)

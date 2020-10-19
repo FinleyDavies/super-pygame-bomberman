@@ -62,8 +62,10 @@ class Board:
         print("explosion")
         radius += 1
 
-        if self.board[index[1]][index[0]].explode():
-            return 0
+        # if self.board[index[1]][index[0]].explode():
+        #     return 0
+
+        self.board[index[1]][index[0]].explode()
 
         for direction in [(0, 1), (-1, 0), (0, -1), (1, 0)]:
             for i in range(1, radius):  # do not include original index to prevent repeats

@@ -22,12 +22,11 @@ class Player:
         self.board = board
         self.board.add_player(self)
         self.width, self.height = self.board.get_tile_size_float()
-        print(self.width, self.height)
         self.x, self.y = 3.5 * self.width, 3.5 * self.height
         self.is_alive = True
 
         self.speed = self.width / 15
-        self.bomb_count = 3
+        self.bomb_count = 50
         self.bomb_radius = 4
         self.bombs_active = 0
         self.bombs = []
@@ -210,7 +209,7 @@ class Player:
 
 
     def place_bomb(self):
-        if self.bombs_active < self.bomb_count:
+        if self.bombs_active < self.bomb_count and self.board.tile_properties(self.get_tile_pos())["name"] == "floor":
             self.bombs.append(Bomb(self))
             self.bombs_active += 1
 
@@ -277,12 +276,13 @@ class Player:
 
 class Bomb:
     dud_chance = 0
-    chain_time = 0.2  # delay between explosions in chain reactions
+    chain_time = 0.1  # delay between explosions in chain reactions
 
     def __init__(self, owner):
         self.time_created = time.time()
         self.owner = owner
         self.x, self.y = self.owner.get_pos(True)
+        self.index = self.owner.board.get_index_from_pos((self.x, self.y))
         self.fuse_time = 2.5
         self.radius = self.owner.get_bomb_radius()
         self.inactive = False
@@ -295,24 +295,36 @@ class Bomb:
             self.inactive = True
             self.dud_time = randint(5, 15)
 
+        self.owner.board.set_tile(self.index, "bomb")
+
     def update(self):
         if self.fuse_time <= 0:
-            return
+            return 0
 
         delta = time.time() - self.time_created
+
+        in_flame = self.owner.board.tile_properties(self.index)["name"] == "flame"
+
+        if not self.in_flame and in_flame:
+            self.explode(True)
+            self.in_flame = True
 
         if self.inactive and delta > self.dud_time:
             self.inactive = False
             self.time_created = time.time()
 
+
         if not self.inactive and delta > self.fuse_time:
             self.explode()
 
 
-    def explode(self):
-        self.destroy()
-        tile_x, tile_y = self.owner.board.get_index_from_pos((self.x, self.y))
-        self.owner.board.create_explosion((tile_x, tile_y), self.radius)
+    def explode(self, delayed=False):
+        if delayed:
+            self.time_created = time.time() + self.chain_time - self.fuse_time
+        else:
+            self.destroy()
+            tile_x, tile_y = self.owner.board.get_index_from_pos((self.x, self.y))
+            self.owner.board.create_explosion((tile_x, tile_y), self.radius)
 
     def destroy(self):
         self.owner.remove_bomb(self)

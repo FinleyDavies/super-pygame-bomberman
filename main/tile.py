@@ -40,9 +40,10 @@ class Tile:
             self.kill()
 
     def explode(self):
+        solid = self.is_solid
         if self.destructible:
             self.set_tile(self.on_explode)
-        if self.is_solid:
+        if solid:
             return True
         return False
 

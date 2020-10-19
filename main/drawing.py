@@ -62,7 +62,7 @@ def create_animations(players, tiles, powerups):
     tile_animations["wall"] = wall
     tile_animations["wall_destroyed"] = wall_destroyed
     tile_animations["powerup_destroyed"] = powerup_destroyed
-    tile_animations["bomb"] = bomb
+    tile_animations["bomb_entity"] = bomb
     tile_animations["flame"] = flame
 
     # CREATE POWERUP ANIMATIONS ###########################################################################
@@ -83,7 +83,7 @@ def draw_board(board):
 
 
     colour_dict = {"floor": (16, 120, 48), "barrier": (64, 64, 64), "wall": (128, 128, 128), "flame": (207, 53, 46),
-                   "wall_destroyed": (100, 100, 100), "spawn": (100, 110, 38)}
+                   "wall_destroyed": (100, 100, 100), "spawn": (100, 110, 38), "bomb": (16, 120, 48)}
 
     board_size = board.get_size()
     surface = pygame.Surface((board_size[0]*SPRITESIZE[0], board_size[1]*SPRITESIZE[1]))
@@ -126,7 +126,7 @@ def draw_player(surface, player):
         x = int(x * SPRITESIZE[0] / w)
         y = int(y * SPRITESIZE[1] / h)
         rect = pygame.Rect((x, y), SPRITESIZE).move(-SPRITESIZE[0] // 2, -SPRITESIZE[1] // 2)
-        frame = TILE_ANIMATIONS["bomb"].get_current_frame(birth)
+        frame = TILE_ANIMATIONS["bomb_entity"].get_current_frame(birth)
         surface.blit(frame, rect)
 
     x, y = player.get_pos()

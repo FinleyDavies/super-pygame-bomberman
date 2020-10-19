@@ -42,7 +42,7 @@
     "destructible": true,
     "blocks_movement": true,
     "duration": 0,
-    "on_explode": "floor"
+    "on_explode": "flame"
   },
   "flame": {
     "name": "flame",
