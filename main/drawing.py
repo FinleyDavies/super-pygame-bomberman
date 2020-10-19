@@ -136,7 +136,7 @@ def draw_player(surface, player):
     direction = player.movement_direction
     moving = player.is_moving
     rect = pygame.Rect((x, y), PLAYERSIZE).move(-SPRITESIZE[0] // 2, SPRITESIZE[1]//2-PLAYERSIZE[1])
-    frame = PLAYER_ANIMATIONS[["white", "blue", "black", "red"][pid]]["walk" if moving else "stand"][direction//2].get_current_frame()
+    frame = PLAYER_ANIMATIONS[["white", "blue", "black", "red"][pid%4]]["walk" if moving else "stand"][direction//2].get_current_frame()
     surface.blit(frame, rect)
     #pygame.draw.rect(surface, player.get_colour(), rect)
 

@@ -49,7 +49,7 @@ def main():
 
     server.start_listening()
 
-    round = GameRound("33x19walls.txt")
+    round = GameRound("Arena1.txt")
 
     while True:
         for message, user in server.collect_messages():
