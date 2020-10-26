@@ -1,0 +1,27 @@
+{
+  "buttons": {
+    "A": 0,
+    "B": 1,
+    "X": 2,
+    "Y": 3,
+    "LB": 4,
+    "RB": 5,
+    "BACK": 6,
+    "START": 7,
+    "LEFT_STICK_DOWN": 8,
+    "RIGHT_STICK_DOWN": 9
+  },
+  "sticks": {
+    "LEFT_STICK": {
+      "x_axis": 0,
+      "y_axis": 1
+    },
+    "RIGHT_STICK": {
+      "x_axis": 4,
+      "y_axis": 3
+    }
+  },
+  "triggers": {
+    "TRIGGER": 2
+  }
+}
