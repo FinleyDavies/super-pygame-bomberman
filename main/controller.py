@@ -32,7 +32,7 @@ class Hat(ControllerBase):
         if status[0] != 0:
             pressed.append(f"{self.name}_{DIRECTIONS[2 + status[0]]}")
         if status[1] != 0:
-            pressed.append(f"{self.name}_{DIRECTIONS[1 + status[1]]}")
+            pressed.append(f"{self.name}_{DIRECTIONS[1 - status[1]]}")
 
         return pressed
 
