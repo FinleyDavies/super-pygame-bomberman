@@ -121,44 +121,31 @@ class ControlsMenu(Menu):
     CONTROLS = {"UP": pygame.K_w, "LEFT": pygame.K_a, "DOWN": pygame.K_s, "RIGHT": pygame.K_d, "PUNCH": pygame.K_j,
                 "DETONATE": pygame.K_k}
 
-    def __init__(self, screen, players):
+    def __init__(self, screen, players, controls):
         super().__init__(screen, "Controls", len(players) + 1)
         self.players = players
-        self.set_buttons(self.CONTROLS)
+        self.controls = controls
+
+        self.set_buttons()
         self.event_queue = Queue()
         self.changing = False
 
-    def set_buttons(self, controls):
+    def set_buttons(self):
         # [self.layout[i+1].append(None) for i in range(len(self.layout)-1)]
         for column, player in enumerate(self.players):
             self.add_subtitle(player, column + 1)
 
         for column in range(len(self.players)):
-            for control in controls:
-                self.add_button(control, self.change_binding, column + 1, True)
+            for control in self.controls:
+                self.add_button(control, self.change_binding, column + 1, True, )
 
     def update(self, event):
         super().update(event)
         if self.changing:
             self.event_queue.put(event)
 
-    def draw(self):
-        if self.is_open:
-            self.surface.fill((255, 255, 255, 128))
-
-            rect = self.title.get_rect()
-            rect.center = (self.rect.width / 2, 30)
-            self.surface.blit(self.title, rect)
-
-            for button in self.buttons:
-                button.draw()
-
-            self.screen.blit(self.surface, (0, 0))
-
-    def reset_controls(self):
-        pass
-
-    def change_binding(self, button):
+    def change_binding(self, button, callback):
+        # callback runs in separate thread and must return a string
         if self.changing:
             return
 
@@ -171,7 +158,7 @@ class ControlsMenu(Menu):
                 if event.type == pygame.KEYDOWN:
                     break
 
-            button.change_text(f"{button.text}: {pygame.key.name(event.key)}")
+            button.render_text(f"{button.text}: {pygame.key.name(event.key)}")
             self.changing = False
 
         t = Thread(target=print_key)

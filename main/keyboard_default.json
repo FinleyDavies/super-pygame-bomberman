@@ -1,0 +1,9 @@
+{
+  "up": "w",
+  "left": "a",
+  "down": "s",
+  "right": "d",
+  "place bomb": "h",
+  "punch": "j",
+  "detonate": "k"
+}

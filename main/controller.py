@@ -4,6 +4,13 @@ from pygame import joystick
 DIRECTIONS = ["UP", "LEFT", "DOWN", "RIGHT"]
 ANALOG_THRESHOLD = 0.4
 
+# controller key names must be all uppercase to avoid collisions with pygame.key.name (returns lowercase letter),
+# as otherwise, both the a button on the controller and keyboard will have the same identifier
+
+
+# TODO use pygame events directly to generate KEYDOWN and KEYUP (or other) events with custom ids to make input
+#  handling easier
+
 
 class ControllerBase(metaclass=ABCMeta):
 
@@ -11,6 +18,9 @@ class ControllerBase(metaclass=ABCMeta):
         self.controller = controller
         self.name = name
         self.id = id
+
+    def get_id(self):
+        return self.id
 
     @abstractmethod
     def get_buttons_pressed(self):
@@ -132,10 +142,10 @@ class Controller(ControllerBase):
         pressed = list()
         for index, name in self.buttons.items():
             if self.controller.get_button(index):
-                pressed.append(name)
+                pressed.append(f"{name}({self.id})")
 
         for component in self.components:
-            pressed = pressed + component.get_buttons_pressed()
+            pressed = pressed + [f"{name}({self.id})" for name in component.get_buttons_pressed()]
 
         return pressed
 
@@ -151,13 +161,9 @@ def update(controllers: list):  # TODO update to pygame 2 as joysticks can't be 
     if len(controllers) != joystick.get_count():
         pass
 
-
-def main():
-    import pygame
+def init():
     import json, os
-    pygame.init()
-    #pygame.display.set_mode((500, 500))
-    clock = pygame.time.Clock()
+
     joystick.init()
     controllers = list()
     for i in range(joystick.get_count()):
@@ -173,6 +179,16 @@ def main():
 
         controller.load_controls(keys)
         controllers.append(controller)
+
+    return controllers
+
+def main():
+    import pygame
+    import json, os
+    pygame.init()
+    #pygame.display.set_mode((500, 500))
+    clock = pygame.time.Clock()
+    controllers = init()
 
     while True:
         pygame.event.get()

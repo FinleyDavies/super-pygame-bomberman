@@ -1,0 +1,9 @@
+{
+  "up": "DPAD_UP(0)",
+  "left": "DPAD_LEFT(0)",
+  "down": "DPAD_DOWN(0)",
+  "right": "DPAD_RIGHT(0)",
+  "place bomb": "A(0)",
+  "punch": "Y(0)",
+  "detonate": "B(0)"
+}

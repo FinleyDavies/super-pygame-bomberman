@@ -11,7 +11,7 @@ class Button:
     COLOUR = (230, 230, 230)
     PRESS_TIME = 0.1
 
-    def __init__(self, surface, rect, text="", callback=None, self_parameter=False, colour=None, font_name=None, font_size=20, interactive=True, draw_rect=True):
+    def __init__(self, surface, rect, text="", callback=None, self_parameter=False, colour=None, font_name=None, font_size=20, interactive=True, draw_rect=True, id=0):
         self.parent_surface = surface
         self.callback = callback
         self.rect = rect
@@ -20,6 +20,7 @@ class Button:
         self.font_size = font_size
         self.interactive = interactive
         self.draw_rect = draw_rect
+        self.id = id
 
         if colour is None:
             colour = self.COLOUR
@@ -90,10 +91,6 @@ class Button:
                     self.callback(self)
                 else:
                     self.callback()
-
-    def change_text(self, text):
-        self.render_text(text)
-
 
     def render_text(self, text):
         self.rendered = self.font.render(text, True, (10, 10, 10))

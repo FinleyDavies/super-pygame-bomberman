@@ -136,7 +136,7 @@ def main():
 
     menu = Menu(screen)
     # controls = Menu(screen, "Controls")
-    controls = ControlsMenu(screen, ["Player1", "Player2", "Player3"])
+    controls = ControlsMenu(screen, ["Player1", "Player2", "Player3"], ControlsMenu.CONTROLS)
     menu.add_menu(controls)
     menu.add_button("Exit Game", lambda: pygame.event.post(pygame.event.Event(pygame.QUIT, dict())))
     menus = [menu, controls]
@@ -192,6 +192,7 @@ def main():
                 keystate = [pygame.key.get_pressed()[key] for key in KEYS]
                 command = get_command_from_keystate(keystate, client_player)
                 game_queue.put(command)
+                print(command)
                 client.send_message([1, command.serialize()])
 
                 command = SetPosition(client_player, client_player.x, client_player.y)
