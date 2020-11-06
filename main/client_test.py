@@ -11,6 +11,8 @@ from queue import Queue
 from collections import OrderedDict
 from menu import Menu, ControlsMenu
 from drawing import draw_player, draw_board, convert_sheets
+from keybinding import KeyBinds
+import controller
 
 
 def handle_message(client, message):
@@ -84,7 +86,9 @@ def connect(host=None, port=None, username=None):
     client.send_message([0, username])
 
     print("Loading board")
-    game_board = Board.from_string(client.receive_message()[1])
+    c = client.receive_message()[1]
+    print(c)
+    game_board = Board.from_string(c)
     print(game_board)
     print("Game board has been loaded\n")
 
@@ -121,6 +125,7 @@ def main():
         return fps_text
 
     menu = Menu(screen)
+    controllers = controller.init()
     # controls = Menu(screen, "Controls")
     controls = ControlsMenu(screen, ["Player1", "Player2", "Player3"], ControlsMenu.CONTROLS)
     menu.add_menu(controls)
@@ -146,17 +151,20 @@ def main():
         },
         "place bomb": {
             True: PlaceBomb(client_player),
-            False: Dummy()
+            False: None
         },
         "punch": {
             True: Punch(client_player),
-            False: Dummy()
+            False: None
         },
         "detonate": {
-            True: Dummy(),
-            False: Dummy()
+            True: None,
+            False: None
         },
     }
+
+    binding = KeyBinds(actions)
+    binding.load_controls("controller_default.json")
 
     game_queue = Queue()
 
@@ -182,7 +190,9 @@ def main():
             elif message[0] == 1:   # game command
                 objects = players.copy()
                 objects[game_board.get_id()] = game_board
-                game_queue.put(deserialize(message[1], objects))
+                c = deserialize(message[1], objects)
+                print(message[1])
+                game_queue.put(c)
 
             elif message[0] == 2:   # chat message
                 print(message[1])
@@ -197,30 +207,29 @@ def main():
             elif message[0] == 5:   # add player
                 name, id  = message[1].split(",")
 
+        for cont in controllers:
+            cont.generate_events()
+            cont.post_events()
 
 
         for event in pygame.event.get():
             [menu.update(event) for menu in menus]
+            binding.push_event(event)
 
             if event.type == pygame.QUIT:
                 running = False
 
             if event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
-                keystate = [pygame.key.get_pressed()[key] for key in KEYS]
-                command = get_command_from_keystate(keystate, client_player)
-                game_queue.put(command)
-                print(command)
-                client.send_message([1, command.serialize()])
-
                 command = SetPosition(client_player, client_player.x, client_player.y)
                 game_queue.put(command)
                 client.send_message([1, command.serialize()])
 
-                if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
-                    # command = CreateExplosion(game_board, client_player.get_tile_pos(), 4)
-                    command = PlaceBomb(client_player)
-                    game_queue.put(command)
-                    client.send_message([1, command.serialize()])
+        binding.update_keystate()
+        for command in binding.get_commands():
+            if command is not None:
+                game_queue.put(command)
+                print(command.serialize())
+                client.send_message([1, command.serialize()])
 
 
         while not game_queue.empty():
