@@ -47,39 +47,14 @@ class KeyBinds:
                     if self.controls[name] in ["up", "left", "down", "right"]:
                         updated = True
 
-            else:
-                for controller in self.controllers:
-                    pressed_buttons = controller.get_buttons_pressed()
-                    for pressed_button in pressed_buttons:
-                        if pressed_button in self.controls:
-                            previously_pressed = self.keystate[self.controls[pressed_button]]
-                            self.keystate[self.controls[pressed_button]] = True
-
-                    # if there is a button in keystate that isnt in pressed_buttons then it should be not pressed
-                    for valid_button in self.keystate:
-
-
-
-                # for controller in self.controllers:
-                #     buttons_pressed = controller.get_buttons_pressed()
-                #
-                #     for action, pressed in self.keystate.items():
-                #         p = False
-                #         valid_button = False
-                #         for button in buttons_pressed:
-                #             if button in self.controls:
-                #                 valid_button = True
-                #                 if action == self.controls[button]:
-                #                     p = True
-                #                     if not pressed:
-                #                         self.keystate[action] = True
-                #                         if action in ["up", "left", "down", "right"]:
-                #                             updated = True
-                #         if valid_button and not p:
-                #             if pressed:
-                #                 self.keystate[action] = False
-                #                 if action in ["up", "left", "down", "right"]:
-                #                     updated = True
+            elif event.type == controller.CONTROLLERBUTTONDOWN or event.type == controller.CONTROLLERBUTTONUP:
+                pressed = event.type == controller.CONTROLLERBUTTONDOWN
+                name = event.button
+                self.pressed_queue.put(name)
+                if name in self.controls:
+                    self.keystate[self.controls[name]] = pressed
+                    if self.controls[name] in ["up", "left", "down", "right"]:
+                        updated = True
 
         return updated
 
@@ -115,6 +90,10 @@ def main():
     print(pygame.key.get_focused())
 
     while True:
+        for cont in controllers:
+            cont.generate_events()
+            cont.post_events()
+
         for event in pygame.event.get():
             binding.push_event(event)
 

@@ -1,8 +1,17 @@
 from abc import ABCMeta, abstractmethod
-from pygame import joystick
+from pygame import joystick, event, USEREVENT, JOYBUTTONUP, JOYBUTTONDOWN
 
 DIRECTIONS = ["UP", "LEFT", "DOWN", "RIGHT"]
 ANALOG_THRESHOLD = 0.4
+CONTROLLERBUTTONDOWN = USEREVENT + 1
+CONTROLLERBUTTONUP = USEREVENT + 2
+
+controller_down = event.Event(CONTROLLERBUTTONDOWN, button="A", controller=0)
+controller_up = event.Event(CONTROLLERBUTTONUP, button="A", controller=0)
+
+
+# controller_down events created when a unique button is added to pressed
+# controller_up created when
 
 # controller key names must be all uppercase to avoid collisions with pygame.key.name (returns lowercase letter),
 # as otherwise, both the a button on the controller and keyboard will have the same identifier
@@ -16,6 +25,8 @@ class ControllerBase(metaclass=ABCMeta):
 
     def __init__(self, controller: joystick.Joystick, name: str, id: int):
         self.controller = controller
+        self.pressed = list()
+        self.events = list()
         self.name = name
         self.id = id
 
@@ -25,6 +36,29 @@ class ControllerBase(metaclass=ABCMeta):
     @abstractmethod
     def get_buttons_pressed(self):
         pass
+
+    def generate_events(self):
+        prev = set(self.pressed)
+        curr = set(self.get_buttons_pressed())
+        if prev != curr:
+            for button_down in curr.difference(prev):
+                self.events.append(
+                    event.Event(CONTROLLERBUTTONDOWN, button=button_down, controller=self.controller.get_id()))
+
+            for button_up in prev.difference(curr):
+                self.events.append(
+                    event.Event(CONTROLLERBUTTONUP, button=button_up, controller=self.controller.get_id()))
+
+            self.pressed = list(curr)
+
+    def collect_events(self):
+        events = self.events
+        self.events = list()
+        return events
+
+    def post_events(self):
+        for e in self.collect_events():
+            event.post(e)
 
 
 class Hat(ControllerBase):
@@ -45,7 +79,6 @@ class Hat(ControllerBase):
             pressed.append(f"{self.name}_{DIRECTIONS[1 - status[1]]}")
 
         return pressed
-
 
 class AnalogStick(ControllerBase):
     def __init__(self, controller: joystick.Joystick, x_axis, y_axis, name: str = None, id: int = 0):
@@ -108,7 +141,6 @@ class Controller(ControllerBase):
 
         self.pressed = []
 
-
     def load_controls(self, controls: dict = None):
         if controls is None:  # only hats and buttons can be reliably mapped
             for i in range(self.controller.get_numbuttons()):
@@ -149,17 +181,11 @@ class Controller(ControllerBase):
 
         return pressed
 
-    def update_state(self):
-        pressed = self.get_buttons_pressed()
-        if self.pressed != pressed:
-            self.pressed = pressed
-            return pressed
-        return None
-
 
 def update(controllers: list):  # TODO update to pygame 2 as joysticks can't be added while running in pygame 1
     if len(controllers) != joystick.get_count():
         pass
+
 
 def init():
     import json, os
@@ -182,21 +208,27 @@ def init():
 
     return controllers
 
+
 def main():
     import pygame
     import json, os
     pygame.init()
-    #pygame.display.set_mode((500, 500))
+    # pygame.display.set_mode((500, 500))
     clock = pygame.time.Clock()
     controllers = init()
 
     while True:
-        pygame.event.get()
+        for e in pygame.event.get():
+            if e.type == CONTROLLERBUTTONDOWN:
+                print("DOWN", e.button)
+            elif e.type == CONTROLLERBUTTONUP:
+                print("UP", e.button)
+
         for controller in controllers:
-            buttons = controller.update_state()
-            if buttons:
-                print(buttons)
+            controller.generate_events()
+            controller.post_events()
         clock.tick(60)
+
 
 if __name__ == "__main__":
     main()
