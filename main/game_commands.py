@@ -6,7 +6,7 @@ import json
 
 
 class Command(metaclass=ABCMeta):
-    def __init__(self, target, **kwargs):
+    def __init__(self, target=None, **kwargs):
         self.time_created = time()
         self.__dict__.update(kwargs)
         self.target = target
@@ -40,6 +40,15 @@ class Move(Command):
     def execute(self):
         self.target.set_direction(self.direction)
         self.target.set_is_moving(True)
+
+
+class UpdateDirection(Command):
+    def __init__(self, target, direction, active):
+        super().__init__(target, direction=direction, active=active)
+
+    def execute(self):
+        self.target.update_direction(self.direction, self.active)
+
 
 
 class SetPosition(Command):

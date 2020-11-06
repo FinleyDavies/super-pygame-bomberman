@@ -33,6 +33,7 @@ class Player:
         self.powerups = [False, False, False, False]
         self.movement_direction = 2  # facing downwards
         self.control_direction = 2
+        self.control_directions = []
         self.is_moving = False
         self.time_punched = 0
         self.colour = self.COLOURS[self.player_id % 4]
@@ -186,7 +187,7 @@ class Player:
                 move(vec)
             elif case == 2:
                 self.movement_direction = self.MOVEMENT_VECTORS.index(vec)
-                move(cut_corner(vec), change_direction=False)
+                move(cut_corner(vec), change_direction=False) #TODO change direction here instead of move() to avoid phasing through bombs
             elif case == 3:
                 move(self.MOVEMENT_VECTORS[self.movement_direction])
             elif case == 4:
@@ -248,6 +249,21 @@ class Player:
 
     def set_direction(self, direction):
         self.control_direction = direction
+
+    def update_direction(self, direction, active):
+        if active:
+            self.control_directions.append(direction)
+        else:
+            self.control_directions.remove(direction)
+
+        if self.control_directions:
+            self.set_direction(sum(self.control_directions) // len(self.control_directions))
+            if 6 in self.control_directions and 0 in self.control_directions:
+                self.set_direction(7)
+            self.is_moving = True
+        else:
+            self.is_moving = False
+
 
     def set_is_moving(self, is_moving):
         self.is_moving = is_moving

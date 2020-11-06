@@ -27,16 +27,8 @@ def handle_message(client, message):
         return Board.from_string(client.receive_message()[1])
 
 
-
-
-
-
-
-
-
 def input_callback(client, input):
     client.send_message([2, input])
-
 
 def input_thread(client, callback, username):
     while True:
@@ -44,28 +36,22 @@ def input_thread(client, callback, username):
         callback(client, f"{username}: {message}")
 
 
+
 def get_command_from_keystate(keystate, player):
     if keystate[0]:
         if keystate[1]:
             return Move(player, 1)
-
         if keystate[3]:
             return Move(player, 7)
-
         return Move(player, 0)
-
     elif keystate[1]:
         if keystate[2]:
             return Move(player, 3)
-
         return Move(player, 2)
-
     elif keystate[2]:
         if keystate[3]:
             return Move(player, 5)
-
         return Move(player, 4)
-
     elif keystate[3]:
         return Move(player, 6)
 
@@ -140,6 +126,37 @@ def main():
     menu.add_menu(controls)
     menu.add_button("Exit Game", lambda: pygame.event.post(pygame.event.Event(pygame.QUIT, dict())))
     menus = [menu, controls]
+
+    actions = {
+        "up": {
+            True: UpdateDirection(client_player, 0, True),
+            False: UpdateDirection(client_player, 0, False)
+        },
+        "left": {
+            True: UpdateDirection(client_player, 2, True),
+            False: UpdateDirection(client_player, 2, False)
+        },
+        "down": {
+            True: UpdateDirection(client_player, 4, True),
+            False: UpdateDirection(client_player, 4, False)
+        },
+        "right": {
+            True: UpdateDirection(client_player, 6, True),
+            False: UpdateDirection(client_player, 6, False)
+        },
+        "place bomb": {
+            True: PlaceBomb(client_player),
+            False: Dummy()
+        },
+        "punch": {
+            True: Punch(client_player),
+            False: Dummy()
+        },
+        "detonate": {
+            True: Dummy(),
+            False: Dummy()
+        },
+    }
 
     game_queue = Queue()
 
