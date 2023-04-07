@@ -31,7 +31,7 @@ def handle_messages(server, game: game_round.GameRound):
 
 def main():
     actual_cps = 0
-    server = SocketServer()
+    server = SocketServer(lambda: 0)
     server.start_listening()
     game_objects = list()
     roll_over = 0

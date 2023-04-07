@@ -167,6 +167,16 @@ class SocketServer:
     def listen(self):
         self.sock.listen(5)
         # print(f"(SocketServer) Server started listening for connections on {self.sock.getsockname()}")
+        def make_unique(id):
+            if id in self.clients:
+                try:
+                    id = id[:-1] + str(int(id[-1]) + 1)
+                except ValueError:
+                    id = id + "1"
+                return make_unique(id)
+            else:
+                return id
+
         while True:
             # print("(SocketServer) Waiting for connection")
             client, address = self.sock.accept()
@@ -175,13 +185,10 @@ class SocketServer:
 
             sock_io = ThreadedIO(client, address, self)
             _, username = sock_io.get_input()
-            while username in self.clients:
-                try:
-                    username = username[:-1] + str(int(username[-1]) + 1)
-                except ValueError:
-                    username = username + "1"
+            username = make_unique(username)
 
             sock_io.put_output(0, username)
+            print(f"{username} connected, {sock_io}")
             self.clients[username] = sock_io
 
     def send_to_all(self, message, exclude=None):

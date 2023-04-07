@@ -38,7 +38,7 @@ def load_board(board_name, size):
 def create_animations(players, tiles, powerups):
     player_animations = dict()
     for i, colour in enumerate(["white", "blue", "black", "red"]):
-        player_animations["colour"] = dict()
+        player_animations[colour] = dict()
 
         walk = list()
         walking_delays = [300, 200, 300, 200]
@@ -173,6 +173,9 @@ def main():
     player_animations = create_animations(*sprites)
 
     command_queue = []
+
+    board = load_board("Board1", (WIDTH, HEIGHT))
+    player = Player(board, "Player1", 1)
 
 
 

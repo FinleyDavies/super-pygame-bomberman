@@ -121,7 +121,7 @@ def main():
 
     def update_fps():
         fps = str(int(clock.get_fps()))
-        fps_text = font.render(fps, 1, pygame.Color("green"))
+        fps_text = font.render(fps, True, pygame.Color("green"))
         return fps_text
 
     menu = Menu(screen)
@@ -164,7 +164,7 @@ def main():
     }
 
     binding = KeyBinds(actions)
-    binding.load_controls("controller_default.json")
+    binding.load_controls("keyboard_default.json")
 
     game_queue = Queue()
 
@@ -220,8 +220,15 @@ def main():
                 running = False
 
             if event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
+                print(players)
+                for command in binding.get_commands():
+                    if command is not None:
+                        game_queue.put(command)
+                        print(command.serialize())
+                        client.send_message([1, command.serialize()])
+
                 command = SetPosition(client_player, client_player.x, client_player.y)
-                game_queue.put(command)
+                #game_queue.put(command)
                 client.send_message([1, command.serialize()])
 
         binding.update_keystate()
@@ -248,7 +255,7 @@ def main():
         board_surface = pygame.transform.scale(board_surface, (WIDTH, HEIGHT))
 
         screen.blit(board_surface, (0, 0))
-        screen.blit(update_fps(), (10, 0))
+        # screen.blit(update_fps(), (10, 0))
         [menu.draw() for menu in menus]
         pygame.display.update()
         screen.fill((16, 120, 48))
